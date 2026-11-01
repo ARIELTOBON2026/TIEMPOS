@@ -21,35 +21,106 @@
     --danger: #dc3545;
   }
   * { box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f6f9; margin: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; margin: 0; }
   .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--accent)); }
-  .login-card { background: #fff; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.2); width: 100%; max-width: 420px; }
+  .login-card { background: #fff; padding: 2.5rem; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.15); width: 100%; max-width: 420px; }
   .sidebar { width: 260px; background: var(--primary); color: #fff; min-height: 100vh; position: fixed; left: 0; top: 0; padding: 1rem 0; transition: transform .3s; z-index: 1000; }
-  .sidebar .brand { padding: 0 1rem 1rem; border-bottom: 1px solid rgba(255,255,255,.1); font-weight: 700; font-size: 1.1rem; }
-  .sidebar .nav-link { color: rgba(255,255,255,.8); padding: .75rem 1.25rem; border-left: 3px solid transparent; display: flex; align-items: center; gap: .75rem; text-decoration: none; }
+  .sidebar .brand { padding: 0 1.5rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,.1); font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .sidebar .nav-link { color: rgba(255,255,255,.7); padding: .85rem 1.5rem; border-left: 3px solid transparent; display: flex; align-items: center; gap: .75rem; text-decoration: none; transition: all 0.2s; font-size: 0.95rem; }
   .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--warning); }
   .main-content { margin-left: 260px; padding: 1.5rem; min-height: 100vh; }
-  .topbar { background: #fff; padding: .75rem 1.5rem; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.05); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
-  .stat-card { background: #fff; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); border-left: 4px solid var(--accent); }
-  .stat-card .value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
-  .stat-card .label { color: #6c757d; font-size: .85rem; text-transform: uppercase; letter-spacing: .5px; }
-  .card-panel { background: #fff; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); margin-bottom: 1.5rem; }
-  .table thead th { background: var(--primary); color: #fff; font-size: .85rem; text-transform: uppercase; letter-spacing: .5px; border: none; }
-  .badge-estado { padding: .35em .7em; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+  .topbar { background: #fff; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.04); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.04); }
+  
+  /* --- ESTILOS MODERNOS DASHBOARD --- */
+  .stat-card-modern {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  }
+  .stat-icon-wrap {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+  }
+  .stat-value-modern {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.5px;
+  }
+  .stat-label-modern {
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .trend-badge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .trend-up { background: #d1e7dd; color: #0f5132; }
+  .trend-neutral { background: #e9ecef; color: #495057; }
+  
+  .card-panel-modern {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.04);
+    margin-bottom: 1.5rem;
+  }
+  .card-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .card-panel-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+  }
+  /* --- FIN ESTILOS DASHBOARD --- */
+
+  .card-panel { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.04); margin-bottom: 1.5rem; border: 1px solid rgba(0,0,0,0.04); }
+  .table thead th { background: var(--primary); color: #fff; font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; border: none; font-weight: 600; }
+  .table-hover tbody tr:hover { background-color: rgba(13, 27, 42, 0.02); }
+  .badge-estado { padding: .35em .75em; border-radius: 20px; font-size: .75rem; font-weight: 600; }
   .badge-pendiente { background: #fff3cd; color: #856404; }
   .badge-aprobado { background: #d1e7dd; color: #0f5132; }
   .badge-rechazado { background: #f8d7da; color: #842029; }
-  .loader-overlay { position: fixed; inset: 0; background: rgba(255,255,255,.85); display: none; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 1rem; }
+  .loader-overlay { position: fixed; inset: 0; background: rgba(255,255,255,.9); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 1rem; }
   .loader-overlay.active { display: flex; }
-  .spinner { width: 50px; height: 50px; border: 4px solid #e0e1dd; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+  .spinner { width: 45px; height: 45px; border: 4px solid #e0e1dd; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 10000; }
-  .section { display: none; }
+  .toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 10000; }
+  .section { display: none; animation: fadeIn 0.3s ease; }
   .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   
-  /* Estilos búsqueda */
-  .funcionario-item { cursor: pointer; padding: 0.6rem 1rem; transition: background 0.2s; }
-  .funcionario-item:hover { background-color: #f8f9fa; }
+  .funcionario-item { cursor: pointer; padding: 0.75rem 1rem; transition: background 0.2s; border-left: 3px solid transparent; }
+  .funcionario-item:hover { background-color: #f8f9fa; border-left-color: var(--primary); }
   
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); }
@@ -64,21 +135,23 @@
 <div id="loginView" class="login-wrap">
   <div class="login-card">
     <div class="text-center mb-4">
-      <i class="bi bi-shield-lock-fill" style="font-size:3rem;color:var(--primary)"></i>
-      <h3 class="mt-2">Control de Tiempo Extra</h3>
+      <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+        <i class="bi bi-shield-lock-fill text-white" style="font-size: 2rem;"></i>
+      </div>
+      <h3 class="mt-2 fw-bold">Control de Tiempo Extra</h3>
       <small class="text-muted">Acceso Exclusivo para Administrador</small>
     </div>
     <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
       <div class="mb-3">
-        <label class="form-label">Usuario</label>
-        <input type="text" id="loginUser" class="form-control" required autocomplete="username">
+        <label class="form-label fw-semibold">Usuario</label>
+        <input type="text" id="loginUser" class="form-control form-control-lg" required autocomplete="username" style="border-radius: 10px;">
       </div>
-      <div class="mb-3">
-        <label class="form-label">Contraseña</label>
-        <input type="password" id="loginPass" class="form-control" required autocomplete="current-password">
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Contraseña</label>
+        <input type="password" id="loginPass" class="form-control form-control-lg" required autocomplete="current-password" style="border-radius: 10px;">
       </div>
-      <button type="submit" class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</button>
-      <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
+      <button type="submit" class="btn btn-primary w-100 btn-lg fw-semibold" style="border-radius: 10px;"><i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión</button>
+      <div id="loginError" class="alert alert-danger mt-3 d-none" style="border-radius: 10px;"></div>
     </form>
   </div>
 </div>
@@ -87,7 +160,7 @@
 <div id="appView" class="d-none">
   <aside class="sidebar" id="sidebar">
     <div class="brand"><i class="bi bi-clock-history"></i> Tiempo Extra</div>
-    <nav class="nav flex-column mt-2">
+    <nav class="nav flex-column mt-3">
       <a class="nav-link active" data-section="dashboard" href="#"><i class="bi bi-speedometer2"></i> Panel Principal</a>
       <a class="nav-link" data-section="funcionarios" href="#"><i class="bi bi-people"></i> Gestión Funcionarios</a>
       <a class="nav-link" data-section="registrar" href="#"><i class="bi bi-plus-circle"></i> Registrar Tiempo Extra</a>
@@ -97,39 +170,117 @@
       <a class="nav-link" data-section="reportes" href="#"><i class="bi bi-file-earmark-pdf"></i> Reportes</a>
       <a class="nav-link" data-section="configuracion" href="#"><i class="bi bi-gear"></i> Configuración</a>
       <a class="nav-link" data-section="bitacora" href="#"><i class="bi bi-journal-check"></i> Bitácora Auditoría</a>
-      <a class="nav-link text-warning" href="#" onclick="doLogout()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
+      <div class="mt-auto pt-3 border-top border-secondary border-opacity-25">
+        <a class="nav-link text-warning" href="#" onclick="doLogout()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
+      </div>
     </nav>
   </aside>
 
   <main class="main-content">
     <div class="topbar">
-      <div>
-        <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list"></i></button>
-        <strong id="topTitle">Panel Principal</strong>
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-sm btn-light d-md-none" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list fs-5"></i></button>
+        <strong id="topTitle" class="fs-5">Panel Principal</strong>
       </div>
-      <div><span class="text-muted">Administrador:</span> <strong id="adminName">Admin</strong></div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="d-none d-sm-block">
+          <div class="fw-semibold" style="font-size: 0.9rem;">Administrador</div>
+          <div class="text-muted" style="font-size: 0.75rem;" id="adminName">Admin</div>
+        </div>
+      </div>
     </div>
 
-    <!-- DASHBOARD -->
+    <!-- DASHBOARD (REDISEÑADO) -->
     <section id="dashboard" class="section active">
-      <div class="row g-3 mb-3">
-        <div class="col-md-3"><div class="stat-card"><div class="label">Funcionarios Activos</div><div class="value" id="stActivos">0</div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="label">Horas Registradas</div><div class="value" id="stRegistradas">0h 0m</div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="label">Horas Aprobadas</div><div class="value" id="stAprobadas">0h 0m</div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="label">Días con Actividad</div><div class="value" id="stDias">0</div></div></div>
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-xl-3">
+          <div class="stat-card-modern">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="stat-icon-wrap" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;">
+                <i class="bi bi-people-fill"></i>
+              </div>
+              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> 12%</span>
+            </div>
+            <div class="stat-value-modern" id="stActivos">0</div>
+            <div class="stat-label-modern">Funcionarios Activos</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="stat-card-modern">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="stat-icon-wrap" style="background: rgba(253, 126, 20, 0.1); color: #fd7e14;">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> 8%</span>
+            </div>
+            <div class="stat-value-modern" id="stRegistradas">0h 0m</div>
+            <div class="stat-label-modern">Horas Registradas</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="stat-card-modern">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="stat-icon-wrap" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
+                <i class="bi bi-check-circle-fill"></i>
+              </div>
+              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> 15%</span>
+            </div>
+            <div class="stat-value-modern" id="stAprobadas">0h 0m</div>
+            <div class="stat-label-modern">Horas Aprobadas</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <div class="stat-card-modern">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="stat-icon-wrap" style="background: rgba(111, 66, 193, 0.1); color: #6f42c1;">
+                <i class="bi bi-calendar-check-fill"></i>
+              </div>
+              <span class="trend-badge trend-neutral"><i class="bi bi-dash"></i> Este mes</span>
+            </div>
+            <div class="stat-value-modern" id="stDias">0</div>
+            <div class="stat-label-modern">Días con Actividad</div>
+          </div>
+        </div>
       </div>
-      <div class="row g-3">
-        <div class="col-md-8"><div class="card-panel"><h6>Tiempo Extra por Mes (Horas)</h6><canvas id="chartMes" height="120"></canvas></div></div>
-        <div class="col-md-4"><div class="card-panel"><h6>Distribución por Tipo</h6><canvas id="chartTipo" height="180"></canvas></div></div>
+      
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card-panel-modern">
+            <div class="card-panel-header">
+              <h6 class="card-panel-title"><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Tiempo Extra por Mes</h6>
+              <select class="form-select form-select-sm" style="width: auto; border-radius: 8px; border-color: #e9ecef;">
+                <option>2026</option>
+                <option>2025</option>
+              </select>
+            </div>
+            <div style="height: 280px;">
+              <canvas id="chartMes"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card-panel-modern">
+            <div class="card-panel-header">
+              <h6 class="card-panel-title"><i class="bi bi-pie-chart-fill me-2 text-warning"></i>Distribución por Tipo</h6>
+            </div>
+            <div style="height: 220px; position: relative;">
+              <canvas id="chartTipo"></canvas>
+            </div>
+            <div class="mt-4" id="chartTipoLegend"></div>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- FUNCIONARIOS -->
     <section id="funcionarios" class="section">
       <div class="card-panel">
-        <div class="d-flex justify-content-between mb-3">
-          <h5 class="m-0">Gestión de Funcionarios</h5>
-          <button class="btn btn-primary" onclick="openFuncionarioModal()"><i class="bi bi-plus"></i> Nuevo Funcionario</button>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="m-0 fw-bold">Gestión de Funcionarios</h5>
+          <button class="btn btn-primary" onclick="openFuncionarioModal()"><i class="bi bi-plus-lg"></i> Nuevo Funcionario</button>
         </div>
         <div class="table-responsive">
           <table class="table table-hover align-middle">
@@ -143,41 +294,41 @@
     <!-- REGISTRAR -->
     <section id="registrar" class="section">
       <div class="card-panel">
-        <h5>Registrar Jornada de Tiempo Extra</h5>
+        <h5 class="fw-bold mb-4">Registrar Jornada de Tiempo Extra</h5>
         <form id="formRegistro" onsubmit="event.preventDefault(); guardarRegistro();">
           <div class="row g-3">
             <div class="col-md-6" style="position: relative;">
-              <label class="form-label">Funcionario Activo *</label>
+              <label class="form-label fw-semibold">Funcionario Activo *</label>
               <input type="text" id="regFuncionarioSearch" class="form-control" 
                      placeholder="Escriba nombre o cédula para buscar..." 
                      autocomplete="off" oninput="buscarFuncionario(this.value)">
               <input type="hidden" id="regFuncionario">
               <div id="funcionarioResults" class="list-group position-absolute w-100" 
                    style="z-index: 1050; max-height: 250px; overflow-y: auto; display: none; 
-                          box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #dee2e6;
-                          border-radius: 0.25rem; top: 100%; margin-top: 0.25rem; background: #fff;"></div>
+                          box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #dee2e6;
+                          border-radius: 8px; top: 100%; margin-top: 4px; background: #fff;"></div>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Tipo de Jornada *</label>
+              <label class="form-label fw-semibold">Tipo de Jornada *</label>
               <select id="regTipo" class="form-select" required>
                 <option value="Diurna">Diurna</option><option value="Nocturna">Nocturna</option>
                 <option value="Dominical">Dominical</option><option value="Festiva">Festiva</option>
                 <option value="Otra">Otra</option>
               </select>
             </div>
-            <div class="col-md-3"><label class="form-label">Fecha Inicio *</label><input type="date" id="regFechaIni" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label">Hora Inicio *</label><input type="time" id="regHoraIni" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label">Fecha Fin *</label><input type="date" id="regFechaFin" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label">Hora Fin *</label><input type="time" id="regHoraFin" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label">Descanso (min)</label><input type="number" id="regDescanso" class="form-control" value="0" min="0"></div>
-            <div class="col-md-3"><label class="form-label">Duración Calculada</label><input type="text" id="regDuracion" class="form-control" readonly></div>
-            <div class="col-md-12"><label class="form-label">Motivo *</label><input type="text" id="regMotivo" class="form-control" required></div>
-            <div class="col-md-12"><label class="form-label">Actividad Realizada *</label><textarea id="regActividad" class="form-control" rows="2" required></textarea></div>
-            <div class="col-md-12"><label class="form-label">Observaciones</label><textarea id="regObs" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Fecha Inicio *</label><input type="date" id="regFechaIni" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Hora Inicio *</label><input type="time" id="regHoraIni" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Fecha Fin *</label><input type="date" id="regFechaFin" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Hora Fin *</label><input type="time" id="regHoraFin" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Descanso (min)</label><input type="number" id="regDescanso" class="form-control" value="0" min="0"></div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Duración Calculada</label><input type="text" id="regDuracion" class="form-control bg-light" readonly></div>
+            <div class="col-md-12"><label class="form-label fw-semibold">Motivo *</label><input type="text" id="regMotivo" class="form-control" required></div>
+            <div class="col-md-12"><label class="form-label fw-semibold">Actividad Realizada *</label><textarea id="regActividad" class="form-control" rows="2" required></textarea></div>
+            <div class="col-md-12"><label class="form-label fw-semibold">Observaciones</label><textarea id="regObs" class="form-control" rows="2"></textarea></div>
           </div>
-          <div class="mt-3">
-            <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Guardar Registro</button>
-            <button type="reset" class="btn btn-secondary">Limpiar</button>
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-success px-4"><i class="bi bi-save me-1"></i> Guardar Registro</button>
+            <button type="reset" class="btn btn-light border">Limpiar</button>
           </div>
         </form>
       </div>
@@ -186,7 +337,7 @@
     <!-- HISTORIAL -->
     <section id="historial" class="section">
       <div class="card-panel">
-        <h5>Historial de Registros</h5>
+        <h5 class="fw-bold mb-4">Historial de Registros</h5>
         <div class="table-responsive">
           <table class="table table-hover align-middle">
             <thead><tr><th>Cons.</th><th>Funcionario</th><th>Dependencia</th><th>Fecha Inicio</th><th>Duración</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -199,7 +350,7 @@
     <!-- APROBACIONES -->
     <section id="aprobaciones" class="section">
       <div class="card-panel">
-        <h5>Registros Pendientes de Revisión</h5>
+        <h5 class="fw-bold mb-4">Registros Pendientes de Revisión</h5>
         <div class="table-responsive">
           <table class="table table-hover align-middle">
             <thead><tr><th>Cons.</th><th>Funcionario</th><th>Fechas/Horas</th><th>Duración</th><th>Motivo</th><th>Acción</th></tr></thead>
@@ -212,7 +363,7 @@
     <!-- ACUMULADOS -->
     <section id="acumulados" class="section">
       <div class="card-panel">
-        <h5>Acumulados por Funcionario</h5>
+        <h5 class="fw-bold mb-4">Acumulados por Funcionario</h5>
         <div class="table-responsive">
           <table class="table table-hover align-middle">
             <thead><tr><th>Funcionario</th><th>Jornadas</th><th>Días Calendario</th><th>Total Minutos</th><th>Total Horas</th><th>Equivalencia Días</th></tr></thead>
@@ -225,26 +376,30 @@
     <!-- REPORTES -->
     <section id="reportes" class="section">
       <div class="card-panel">
-        <h5>Generador de Reportes</h5>
-        <div class="row g-3 mb-3">
-          <div class="col-md-3"><label class="form-label">Funcionario</label><select id="repFuncionario" class="form-select"><option value="">Todos</option></select></div>
-          <div class="col-md-3"><label class="form-label">Estado</label><select id="repEstado" class="form-select"><option value="">Todos</option><option value="aprobado">Aprobados</option><option value="pendiente">Pendientes</option><option value="rechazado">Rechazados</option></select></div>
-          <div class="col-md-3"><label class="form-label">Fecha Desde</label><input type="date" id="repDesde" class="form-control"></div>
-          <div class="col-md-3"><label class="form-label">Fecha Hasta</label><input type="date" id="repHasta" class="form-control"></div>
+        <h5 class="fw-bold mb-4">Generador de Reportes</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3"><label class="form-label fw-semibold">Funcionario</label><select id="repFuncionario" class="form-select"><option value="">Todos</option></select></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">Estado</label><select id="repEstado" class="form-select"><option value="">Todos</option><option value="aprobado">Aprobados</option><option value="pendiente">Pendientes</option><option value="rechazado">Rechazados</option></select></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">Fecha Desde</label><input type="date" id="repDesde" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label fw-semibold">Fecha Hasta</label><input type="date" id="repHasta" class="form-control"></div>
         </div>
-        <button class="btn btn-danger" onclick="exportarPDF()"><i class="bi bi-file-earmark-pdf"></i> Exportar PDF</button>
+        <button class="btn btn-danger px-4" onclick="exportarPDF()"><i class="bi bi-file-earmark-pdf me-1"></i> Exportar PDF</button>
       </div>
     </section>
 
     <!-- CONFIGURACIÓN -->
     <section id="configuracion" class="section">
       <div class="card-panel">
-        <h5>Parámetros del Sistema</h5>
+        <h5 class="fw-bold mb-4">Parámetros del Sistema</h5>
         <form id="formConfig" onsubmit="event.preventDefault(); guardarConfig();">
-          <div class="mb-3"><label class="form-label">Nombre Institución</label><input type="text" id="cfgNombre" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Duración Jornada Diaria (Minutos)</label><input type="number" id="cfgJornada" class="form-control" required><small class="text-muted">Ej: 480 min = 8 horas</small></div>
-          <div class="mb-3"><label class="form-label">Nueva Contraseña (opcional, mín. 6 caracteres)</label><input type="password" id="cfgClave" class="form-control" minlength="6"></div>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar Cambios</button>
+          <div class="row g-3">
+            <div class="col-md-8"><label class="form-label fw-semibold">Nombre Institución</label><input type="text" id="cfgNombre" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-semibold">Duración Jornada Diaria (Minutos)</label><input type="number" id="cfgJornada" class="form-control" required><small class="text-muted">Ej: 480 min = 8 horas</small></div>
+            <div class="col-md-6"><label class="form-label fw-semibold">Nueva Contraseña (opcional, mín. 6 caracteres)</label><input type="password" id="cfgClave" class="form-control" minlength="6"></div>
+          </div>
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-1"></i> Guardar Cambios</button>
+          </div>
         </form>
       </div>
     </section>
@@ -252,10 +407,10 @@
     <!-- BITÁCORA -->
     <section id="bitacora" class="section">
       <div class="card-panel">
-        <h5>Auditoría de Acciones</h5>
+        <h5 class="fw-bold mb-4">Auditoría de Acciones</h5>
         <div class="table-responsive">
           <table class="table table-hover align-middle">
-            <thead><tr><th>Fecha/Hora</th><th>Admin</th><th>Acción</th><th>ID Registro</th><th>Motivo</th></tr></thead>
+            <thead><tr><th>Fecha/Hora</th><th>Administrador</th><th>Acción</th><th>ID Registro</th><th>Motivo</th></tr></thead>
             <tbody id="tblBitacora"></tbody>
           </table>
         </div>
@@ -266,22 +421,27 @@
 
 <!-- MODAL FUNCIONARIO -->
 <div class="modal fade" id="modalFuncionario" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 16px; border: none;">
       <form id="formFuncionario" onsubmit="event.preventDefault(); guardarFuncionario();">
-        <div class="modal-header"><h5 class="modal-title">Funcionario</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Funcionario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
         <div class="modal-body">
           <input type="hidden" id="funcId">
-          <div class="mb-2"><label class="form-label">Identificación *</label><input type="text" id="funcIdentificacion" class="form-control" required></div>
-          <div class="mb-2"><label class="form-label">Nombre Completo *</label><input type="text" id="funcNombres" class="form-control" required></div>
-          <div class="mb-2"><label class="form-label">Cargo</label><input type="text" id="funcCargo" class="form-control"></div>
-          <div class="mb-2"><label class="form-label">Dependencia</label><input type="text" id="funcDependencia" class="form-control"></div>
-          <div class="mb-2"><label class="form-label">Correo</label><input type="email" id="funcCorreo" class="form-control"></div>
-          <div class="mb-2"><label class="form-label">Estado</label><select id="funcEstado" class="form-select"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
-          <div class="mb-2"><label class="form-label">Observaciones</label><textarea id="funcObs" class="form-control" rows="2"></textarea></div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label fw-semibold">Identificación *</label><input type="text" id="funcIdentificacion" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label fw-semibold">Nombre Completo *</label><input type="text" id="funcNombres" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label fw-semibold">Cargo</label><input type="text" id="funcCargo" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-semibold">Dependencia</label><input type="text" id="funcDependencia" class="form-control"></div>
+            <div class="col-md-12"><label class="form-label fw-semibold">Correo</label><input type="email" id="funcCorreo" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-semibold">Estado</label><select id="funcEstado" class="form-select"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
+            <div class="col-md-12"><label class="form-label fw-semibold">Observaciones</label><textarea id="funcObs" class="form-control" rows="2"></textarea></div>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
       </form>
@@ -290,7 +450,7 @@
 </div>
 
 <!-- LOADER & TOASTS -->
-<div class="loader-overlay" id="loader"><div class="spinner"></div><div>Procesando...</div></div>
+<div class="loader-overlay" id="loader"><div class="spinner"></div><div class="fw-semibold text-primary">Procesando...</div></div>
 <div class="toast-container" id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -307,17 +467,23 @@ let funcionariosCache = [];
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPyUlSPVL2BCt72xAlHRNg-7OTdM4S0JYHUPedPUVghjMxW-fWqcoDFYsYVMo2IuDn/exec';
 
 // ============================================================
-// UTILIDADES Y COMUNICACIÓN FETCH (PARA GITHUB PAGES)
+// UTILIDADES Y COMUNICACIÓN FETCH
 // ============================================================
 function showLoader(show) { document.getElementById('loader').classList.toggle('active', show); }
 function toast(msg, type='success') {
   const c = document.getElementById('toasts');
   const colors = { success:'bg-success', error:'bg-danger', warning:'bg-warning', info:'bg-info' };
   const el = document.createElement('div');
-  el.className = `toast align-items-center text-white ${colors[type]} border-0 show`;
-  el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+  el.className = `toast align-items-center text-white ${colors[type]} border-0 show shadow-lg`;
+  el.style.borderRadius = '10px';
+  el.innerHTML = `<div class="d-flex"><div class="toast-body fw-semibold">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
   c.appendChild(el);
-  setTimeout(() => el.remove(), 4000);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(100%)';
+    el.style.transition = 'all 0.3s ease';
+    setTimeout(() => el.remove(), 300);
+  }, 4000);
 }
 
 function call(fn, ...args) {
@@ -326,9 +492,8 @@ function call(fn, ...args) {
       const response = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({ fn, args }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain evita bloqueos CORS estrictos en Apps Script
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
       });
-      
       const result = await response.json();
       if (result.success !== false) {
         resolve(result.data !== undefined ? result.data : result);
@@ -365,6 +530,8 @@ document.querySelectorAll('.sidebar .nav-link[data-section]').forEach(a => {
     a.classList.add('active');
     document.getElementById('topTitle').textContent = a.textContent.trim();
     loadSection(sec);
+    // Cerrar sidebar en móvil al navegar
+    if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('show');
   });
 });
 
@@ -413,7 +580,7 @@ async function doLogout() {
 }
 
 // ============================================================
-// DASHBOARD
+// DASHBOARD (ACTUALIZADO CON GRÁFICOS MODERNOS)
 // ============================================================
 async function loadDashboard() {
   showLoader(true);
@@ -427,24 +594,111 @@ async function loadDashboard() {
     renderChartTipo(d.distribucionTipo);
   } finally { showLoader(false); }
 }
+
 function renderChartMes(data) {
-  const ctx = document.getElementById('chartMes');
+  const ctx = document.getElementById('chartMes').getContext('2d');
   if (APP.chartMes) APP.chartMes.destroy();
+  
+  // Gradiente moderno para las barras
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, 'rgba(13, 110, 253, 0.85)');
+  gradient.addColorStop(1, 'rgba(13, 110, 253, 0.2)');
+
   APP.chartMes = new Chart(ctx, {
     type: 'bar',
-    data: { labels: data.labels, datasets: [{ label: 'Horas', data: data.data, backgroundColor: '#415a77' }] },
-    options: { responsive: true, plugins: { legend: { display: false } } }
+    data: { 
+      labels: data.labels, 
+      datasets: [{ 
+        label: 'Horas', 
+        data: data.data, 
+        backgroundColor: gradient,
+        borderRadius: 6,
+        borderSkipped: false,
+        barThickness: 'flex',
+        maxBarThickness: 40
+      }] 
+    },
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0d1b2a',
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 12 },
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+          ticks: { font: { size: 11, weight: '500' }, color: '#6c757d' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11, weight: '600' }, color: '#495057' }
+        }
+      }
+    }
   });
 }
+
 function renderChartTipo(data) {
-  const ctx = document.getElementById('chartTipo');
+  const ctx = document.getElementById('chartTipo').getContext('2d');
   if (APP.chartTipo) APP.chartTipo.destroy();
   const labels = Object.keys(data), values = Object.values(data);
+  
+  const modernColors = ['#0d6efd', '#6f42c1', '#fd7e14', '#198754', '#0dcaf0'];
+  
   APP.chartTipo = new Chart(ctx, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data: values, backgroundColor: ['#0d1b2a','#1b263b','#415a77','#778da9','#e0e1dd'] }] },
-    options: { responsive: true }
+    data: { 
+      labels, 
+      datasets: [{ 
+        data: values, 
+        backgroundColor: modernColors.slice(0, labels.length),
+        borderWidth: 3,
+        borderColor: '#ffffff',
+        hoverOffset: 8
+      }] 
+    },
+    options: { 
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0d1b2a',
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context) {
+              return ` ${context.label}: ${context.raw}%`;
+            }
+          }
+        }
+      }
+    }
   });
+
+  // Leyenda personalizada moderna
+  const legendContainer = document.getElementById('chartTipoLegend');
+  if (legendContainer) {
+    legendContainer.innerHTML = labels.map((label, i) => `
+      <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="font-size: 0.85rem; background: #f8f9fa;">
+        <div class="d-flex align-items-center gap-2">
+          <span style="width: 12px; height: 12px; border-radius: 4px; background: ${modernColors[i]};"></span>
+          <span class="fw-semibold text-dark">${label}</span>
+        </div>
+        <strong class="text-primary">${values[i]}%</strong>
+      </div>
+    `).join('');
+  }
 }
 
 // ============================================================
@@ -457,16 +711,16 @@ async function loadFuncionarios() {
     const tb = document.getElementById('tblFuncionarios');
     tb.innerHTML = lista.map(f => `
       <tr>
-        <td>${f.identificacion}</td>
+        <td class="fw-semibold">${f.identificacion}</td>
         <td>${f.nombres}</td>
         <td>${f.cargo||''}</td>
         <td>${f.dependencia||''}</td>
         <td><span class="badge-estado ${f.estado==='activo'?'badge-aprobado':'badge-rechazado'}">${f.estado}</span></td>
         <td>
-          <button class="btn btn-sm btn-outline-primary" onclick='openFuncionarioModal(${JSON.stringify(f)})'><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-outline-danger" onclick="eliminarFuncionario('${f.id}')"><i class="bi bi-trash"></i></button>
+          <button class="btn btn-sm btn-light text-primary" onclick='openFuncionarioModal(${JSON.stringify(f)})'><i class="bi bi-pencil-square"></i></button>
+          <button class="btn btn-sm btn-light text-danger" onclick="eliminarFuncionario('${f.id}')"><i class="bi bi-trash"></i></button>
         </td>
-      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">Sin registros</td></tr>';
+      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Sin registros</td></tr>';
   } finally { showLoader(false); }
 }
 function openFuncionarioModal(f) {
@@ -515,14 +769,13 @@ async function eliminarFuncionario(id) {
 }
 
 // ============================================================
-// REGISTRO TIEMPO EXTRA - BÚSQUEDA DIRECTA CORREGIDA
+// REGISTRO TIEMPO EXTRA
 // ============================================================
 async function loadFormRegistro() {
   showLoader(true);
   try {
     const funcs = await call('obtenerFuncionarios', APP.token, true);
     funcionariosCache = funcs || [];
-    
     document.getElementById('regFuncionarioSearch').value = '';
     document.getElementById('regFuncionario').value = '';
     document.getElementById('funcionarioResults').style.display = 'none';
@@ -551,14 +804,13 @@ function buscarFuncionario(texto) {
   if (filtered.length > 0) {
     resultsDiv.innerHTML = filtered.map(f => `
       <div class="list-group-item funcionario-item" 
-           style="cursor: pointer;"
            onclick="selectFuncionario('${f.id}', '${f.nombres.replace(/'/g, "\\'")}', '${f.identificacion}')">
-        <div class="fw-bold">${f.nombres}</div>
-        <div class="text-muted" style="font-size: 0.85rem;">Cédula: ${f.identificacion} | Cargo: ${f.cargo || 'N/A'}</div>
+        <div class="fw-semibold text-dark">${f.nombres}</div>
+        <div class="text-muted" style="font-size: 0.8rem;">Cédula: ${f.identificacion} | Cargo: ${f.cargo || 'N/A'}</div>
       </div>
     `).join('');
   } else {
-    resultsDiv.innerHTML = '<div class="list-group-item text-muted p-2">No se encontraron funcionarios</div>';
+    resultsDiv.innerHTML = '<div class="list-group-item text-muted p-3 text-center">No se encontraron funcionarios</div>';
   }
   resultsDiv.style.display = 'block';
 }
@@ -631,15 +883,15 @@ async function loadHistorial() {
     const tb = document.getElementById('tblHistorial');
     tb.innerHTML = regs.map(r => `
       <tr>
-        <td>${r.consecutivo}</td>
+        <td class="fw-semibold">#${r.consecutivo}</td>
         <td>${r.nombreFuncionario}</td>
         <td>${r.dependencia}</td>
         <td>${r.fechaInicio} ${r.horaInicio}</td>
-        <td>${fmtDuracion(r.duracionMinutos)}</td>
+        <td class="fw-semibold">${fmtDuracion(r.duracionMinutos)}</td>
         <td>${r.tipoJornada}</td>
         <td>${badgeEstado(r.estado)}</td>
-        <td><button class="btn btn-sm btn-outline-danger" onclick="eliminarRegistro('${r.idRegistro}')"><i class="bi bi-trash"></i></button></td>
-      </tr>`).join('') || '<tr><td colspan="8" class="text-center text-muted">Sin registros</td></tr>';
+        <td><button class="btn btn-sm btn-light text-danger" onclick="eliminarRegistro('${r.idRegistro}')"><i class="bi bi-trash"></i></button></td>
+      </tr>`).join('') || '<tr><td colspan="8" class="text-center text-muted py-4">Sin registros</td></tr>';
   } finally { showLoader(false); }
 }
 async function eliminarRegistro(id) {
@@ -662,16 +914,16 @@ async function loadAprobaciones() {
     const tb = document.getElementById('tblAprobaciones');
     tb.innerHTML = regs.map(r => `
       <tr>
-        <td>${r.consecutivo}</td>
+        <td class="fw-semibold">#${r.consecutivo}</td>
         <td>${r.nombreFuncionario}</td>
-        <td>${r.fechaInicio} ${r.horaInicio} → ${r.fechaFin} ${r.horaFin}</td>
-        <td>${fmtDuracion(r.duracionMinutos)}</td>
+        <td><small class="text-muted">${r.fechaInicio} ${r.horaInicio}</small><br><small class="text-muted">→ ${r.fechaFin} ${r.horaFin}</small></td>
+        <td class="fw-semibold">${fmtDuracion(r.duracionMinutos)}</td>
         <td>${r.motivo}</td>
         <td>
-          <button class="btn btn-sm btn-success" onclick="aprobar('${r.idRegistro}')"><i class="bi bi-check"></i></button>
-          <button class="btn btn-sm btn-danger" onclick="rechazar('${r.idRegistro}')"><i class="bi bi-x"></i></button>
+          <button class="btn btn-sm btn-success" onclick="aprobar('${r.idRegistro}')"><i class="bi bi-check-lg"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="rechazar('${r.idRegistro}')"><i class="bi bi-x-lg"></i></button>
         </td>
-      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">No hay registros pendientes</td></tr>';
+      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">No hay registros pendientes</td></tr>';
   } finally { showLoader(false); }
 }
 async function aprobar(id) {
@@ -704,9 +956,13 @@ async function loadAcumulados() {
     const tb = document.getElementById('tblAcumulados');
     tb.innerHTML = data.map(a => `
       <tr>
-        <td>${a.funcionario}</td><td>${a.jornadas}</td><td>${a.diasCalendario}</td>
-        <td>${a.totalMinutos}</td><td>${a.totalHorasMin}</td><td>${a.equivalenciaDias}</td>
-      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>';
+        <td class="fw-semibold">${a.funcionario}</td>
+        <td>${a.jornadas}</td>
+        <td>${a.diasCalendario}</td>
+        <td>${a.totalMinutos}</td>
+        <td class="fw-semibold text-primary">${a.totalHorasMin}</td>
+        <td><span class="badge bg-info bg-opacity-10 text-info-emphasis">${a.equivalenciaDias} días</span></td>
+      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Sin datos</td></tr>';
   } finally { showLoader(false); }
 }
 
@@ -732,22 +988,38 @@ async function exportarPDF() {
     const data = await call('generarDatosReporte', filtros, APP.token);
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    doc.setFontSize(16); doc.text(data.institucion, 14, 18);
-    doc.setFontSize(11); doc.text('Reporte de Tiempo Extra Laborado', 14, 26);
-    doc.setFontSize(9); doc.text(`Generado: ${data.fechaGeneracion}`, 14, 33);
-    doc.text(`Total registros: ${data.totalRegistros} | Total minutos: ${data.totalMinutos}`, 14, 39);
+    
+    // Encabezado moderno del PDF
+    doc.setFillColor(13, 27, 42);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text(data.institucion || 'Institución', 14, 20);
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    doc.text('Reporte de Tiempo Extra Laborado', 14, 30);
+    
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.text(`Generado: ${data.fechaGeneracion}`, 14, 50);
+    doc.text(`Total registros: ${data.totalRegistros} | Total minutos: ${data.totalMinutos}`, 14, 56);
+    
     const rows = data.registros.map(r => [
       r.consecutivo, r.nombreFuncionario, r.dependencia,
       `${r.fechaInicio} ${r.horaInicio}`, fmtDuracion(r.duracionMinutos),
       r.tipoJornada, r.estado, r.motivo
     ]);
+    
     doc.autoTable({
-      startY: 45,
+      startY: 62,
       head: [['Cons.','Funcionario','Dependencia','Fecha/Hora','Duración','Tipo','Estado','Motivo']],
       body: rows,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [13,27,42] }
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [13, 27, 42], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 249, 250] }
     });
+    
     doc.save(`ReporteTiempoExtra_${new Date().toISOString().substring(0,10)}.pdf`);
     toast('PDF generado correctamente');
   } catch(e) { toast('Error al generar PDF', 'error'); }
@@ -789,10 +1061,12 @@ async function loadBitacora() {
     const tb = document.getElementById('tblBitacora');
     tb.innerHTML = lista.map(b => `
       <tr>
-        <td>${b.fechaHora}</td><td>${b.administrador}</td>
-        <td><span class="badge bg-secondary">${b.accion}</span></td>
-        <td>${b.idRegistro}</td><td>${b.motivo||''}</td>
-      </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted">Sin eventos</td></tr>';
+        <td><small class="text-muted">${b.fechaHora}</small></td>
+        <td class="fw-semibold">${b.administrador}</td>
+        <td><span class="badge bg-secondary bg-opacity-10 text-dark">${b.accion}</span></td>
+        <td>${b.idRegistro || '-'}</td>
+        <td>${b.motivo||''}</td>
+      </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted py-4">Sin eventos</td></tr>';
   } finally { showLoader(false); }
 }
 
