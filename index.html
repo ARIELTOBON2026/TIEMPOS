@@ -1,224 +1,805 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-gray-50">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Tiempo Extra | Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#4F46E5',
-                        secondary: '#10B981',
-                    }
-                }
-            }
-        }
-    </script>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control de Tiempo Extra Laborado</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.0/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --primary: #0d1b2a;
+    --secondary: #1b263b;
+    --accent: #415a77;
+    --light: #e0e1dd;
+    --success: #198754;
+    --warning: #ffc107;
+    --danger: #dc3545;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f6f9; margin: 0; }
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--accent)); }
+  .login-card { background: #fff; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.2); width: 100%; max-width: 420px; }
+  .sidebar { width: 260px; background: var(--primary); color: #fff; min-height: 100vh; position: fixed; left: 0; top: 0; padding: 1rem 0; transition: transform .3s; z-index: 1000; }
+  .sidebar .brand { padding: 0 1rem 1rem; border-bottom: 1px solid rgba(255,255,255,.1); font-weight: 700; font-size: 1.1rem; }
+  .sidebar .nav-link { color: rgba(255,255,255,.8); padding: .75rem 1.25rem; border-left: 3px solid transparent; display: flex; align-items: center; gap: .75rem; text-decoration: none; }
+  .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--warning); }
+  .main-content { margin-left: 260px; padding: 1.5rem; min-height: 100vh; }
+  .topbar { background: #fff; padding: .75rem 1.5rem; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.05); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+  .stat-card { background: #fff; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); border-left: 4px solid var(--accent); }
+  .stat-card .value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+  .stat-card .label { color: #6c757d; font-size: .85rem; text-transform: uppercase; letter-spacing: .5px; }
+  .card-panel { background: #fff; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); margin-bottom: 1.5rem; }
+  .table thead th { background: var(--primary); color: #fff; font-size: .85rem; text-transform: uppercase; letter-spacing: .5px; border: none; }
+  .badge-estado { padding: .35em .7em; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+  .badge-pendiente { background: #fff3cd; color: #856404; }
+  .badge-aprobado { background: #d1e7dd; color: #0f5132; }
+  .badge-rechazado { background: #f8d7da; color: #842029; }
+  .loader-overlay { position: fixed; inset: 0; background: rgba(255,255,255,.85); display: none; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 1rem; }
+  .loader-overlay.active { display: flex; }
+  .spinner { width: 50px; height: 50px; border: 4px solid #e0e1dd; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 10000; }
+  .section { display: none; }
+  .section.active { display: block; }
+  
+  /* Estilos búsqueda */
+  .funcionario-item { cursor: pointer; padding: 0.6rem 1rem; transition: background 0.2s; }
+  .funcionario-item:hover { background-color: #f8f9fa; }
+  
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.show { transform: translateX(0); }
+    .main-content { margin-left: 0; }
+  }
+</style>
 </head>
-<body class="h-full">
+<body>
 
-<div class="flex h-screen overflow-hidden">
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col transition-all duration-300">
-        <div class="p-6 border-b border-slate-700 flex items-center gap-3">
-            <i class="fa-solid fa-clock text-primary text-2xl"></i>
-            <span class="text-xl font-bold tracking-wide">TimeExtra <span class="text-primary">Pro</span></span>
-        </div>
-        
-        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
-            <p class="text-xs text-slate-500 uppercase font-semibold mb-2 px-3">Principal</p>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary text-white font-medium">
-                <i class="fa-solid fa-chart-line w-5"></i> Panel Principal
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition">
-                <i class="fa-solid fa-users w-5"></i> Funcionarios
-            </a>
-            
-            <p class="text-xs text-slate-500 uppercase font-semibold mt-6 mb-2 px-3">Operativo</p>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition">
-                <i class="fa-solid fa-plus-circle w-5"></i> Registrar Jornada
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition relative">
-                <i class="fa-solid fa-clipboard-check w-5"></i> Aprobaciones
-                <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">3</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition">
-                <i class="fa-solid fa-file-lines w-5"></i> Reportes
-            </a>
-
-            <p class="text-xs text-slate-500 uppercase font-semibold mt-6 mb-2 px-3">Sistema</p>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition">
-                <i class="fa-solid fa-gear w-5"></i> Configuración
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition">
-                <i class="fa-solid fa-shield-halved w-5"></i> Auditoría
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-slate-700">
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition">
-                <i class="fa-solid fa-right-from-bracket w-5"></i> Cerrar Sesión
-            </a>
-        </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- TOPBAR -->
-        <header class="bg-white shadow-sm z-10 px-6 py-4 flex justify-between items-center">
-            <div class="relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" placeholder="Buscar funcionario, registro..." class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-80 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-            </div>
-            <div class="flex items-center gap-4">
-                <button class="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-                    <i class="fa-regular fa-bell text-xl"></i>
-                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-                <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
-                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=4F46E5&color=fff" class="w-9 h-9 rounded-full">
-                    <div class="text-sm">
-                        <p class="font-semibold text-gray-800">Administrador</p>
-                        <p class="text-xs text-gray-500">admin@institucion.gob</p>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- DASHBOARD CONTENT -->
-        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
-            <div class="mb-6">
-                <h1 class="text-2xl font-bold text-gray-800">Panel Principal</h1>
-                <p class="text-gray-500">Resumen del control de tiempo extra - Noviembre 2026</p>
-            </div>
-
-            <!-- KPI CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <!-- Card 1 -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm text-gray-500 font-medium">Funcionarios Activos</p>
-                            <h3 class="text-3xl font-bold text-gray-800 mt-2">142</h3>
-                        </div>
-                        <div class="bg-blue-50 p-3 rounded-lg text-primary">
-                            <i class="fa-solid fa-user-group text-xl"></i>
-                        </div>
-                    </div>
-                    <p class="text-xs text-green-600 mt-4 flex items-center gap-1">
-                        <i class="fa-solid fa-arrow-up"></i> 5% vs mes anterior
-                    </p>
-                </div>
-
-                <!-- Card 2 -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm text-gray-500 font-medium">Horas Registradas</p>
-                            <h3 class="text-3xl font-bold text-gray-800 mt-2">348h</h3>
-                        </div>
-                        <div class="bg-amber-50 p-3 rounded-lg text-amber-600">
-                            <i class="fa-solid fa-clock text-xl"></i>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-4 flex items-center gap-1">
-                        <i class="fa-solid fa-minus"></i> Promedio 2.4h por jornada
-                    </p>
-                </div>
-
-                <!-- Card 3 -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm text-gray-500 font-medium">Horas Aprobadas</p>
-                            <h3 class="text-3xl font-bold text-gray-800 mt-2">290h</h3>
-                        </div>
-                        <div class="bg-green-50 p-3 rounded-lg text-green-600">
-                            <i class="fa-solid fa-check-double text-xl"></i>
-                        </div>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-1.5 mt-4">
-                        <div class="bg-green-500 h-1.5 rounded-full" style="width: 83%"></div>
-                    </div>
-                </div>
-
-                <!-- Card 4 -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm text-gray-500 font-medium">Pendientes Revisión</p>
-                            <h3 class="text-3xl font-bold text-red-600 mt-2">12</h3>
-                        </div>
-                        <div class="bg-red-50 p-3 rounded-lg text-red-500">
-                            <i class="fa-solid fa-triangle-exclamation text-xl"></i>
-                        </div>
-                    </div>
-                    <button class="text-xs text-primary font-semibold mt-4 hover:underline">Revisar ahora -></button>
-                </div>
-            </div>
-
-            <!-- CHARTS & RECENT ACTIVITY -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Chart Area -->
-                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold text-gray-800">Tiempo Extra por Mes</h2>
-                        <select class="text-sm border-gray-200 rounded-md focus:ring-primary">
-                            <option>Últimos 6 meses</option>
-                            <option>Este año</option>
-                        </select>
-                    </div>
-                    <!-- Placeholder for Chart.js / ApexCharts -->
-                    <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 text-gray-400">
-                        <i class="fa-solid fa-chart-column text-4xl mr-3"></i>
-                        <span>Gráfico Interactivo (Ej. Chart.js)</span>
-                    </div>
-                </div>
-
-                <!-- Quick Approvals -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-bold text-gray-800 mb-4">Acciones Rápidas</h2>
-                    <div class="space-y-3">
-                        <!-- Item 1 -->
-                        <div class="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <p class="font-semibold text-sm text-gray-800">Juan Pérez</p>
-                                    <p class="text-xs text-gray-500">Tecnología - Diurna</p>
-                                </div>
-                                <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">Pendiente</span>
-                            </div>
-                            <p class="text-xs text-gray-600 mb-3">12 Nov | 2h 30m | Soporte servidor</p>
-                            <div class="flex gap-2">
-                                <button class="flex-1 bg-green-600 text-white text-xs py-1.5 rounded hover:bg-green-700">Aprobar</button>
-                                <button class="flex-1 bg-white border border-red-200 text-red-600 text-xs py-1.5 rounded hover:bg-red-50">Rechazar</button>
-                            </div>
-                        </div>
-                        <!-- Item 2 -->
-                        <div class="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <p class="font-semibold text-sm text-gray-800">María Gómez</p>
-                                    <p class="text-xs text-gray-500">RRHH - Nocturna</p>
-                                </div>
-                                <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">Pendiente</span>
-                            </div>
-                            <p class="text-xs text-gray-600 mb-3">11 Nov | 4h 00m | Cierre mensual</p>
-                            <div class="flex gap-2">
-                                <button class="flex-1 bg-green-600 text-white text-xs py-1.5 rounded hover:bg-green-700">Aprobar</button>
-                                <button class="flex-1 bg-white border border-red-200 text-red-600 text-xs py-1.5 rounded hover:bg-red-50">Rechazar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+<!-- LOGIN -->
+<div id="loginView" class="login-wrap">
+  <div class="login-card">
+    <div class="text-center mb-4">
+      <i class="bi bi-shield-lock-fill" style="font-size:3rem;color:var(--primary)"></i>
+      <h3 class="mt-2">Control de Tiempo Extra</h3>
+      <small class="text-muted">Acceso Exclusivo para Administrador</small>
     </div>
+    <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
+      <div class="mb-3">
+        <label class="form-label">Usuario</label>
+        <input type="text" id="loginUser" class="form-control" required autocomplete="username">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Contraseña</label>
+        <input type="password" id="loginPass" class="form-control" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</button>
+      <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
+    </form>
+  </div>
 </div>
 
+<!-- APP -->
+<div id="appView" class="d-none">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><i class="bi bi-clock-history"></i> Tiempo Extra</div>
+    <nav class="nav flex-column mt-2">
+      <a class="nav-link active" data-section="dashboard" href="#"><i class="bi bi-speedometer2"></i> Panel Principal</a>
+      <a class="nav-link" data-section="funcionarios" href="#"><i class="bi bi-people"></i> Gestión Funcionarios</a>
+      <a class="nav-link" data-section="registrar" href="#"><i class="bi bi-plus-circle"></i> Registrar Tiempo Extra</a>
+      <a class="nav-link" data-section="historial" href="#"><i class="bi bi-journal-text"></i> Historial de Registros</a>
+      <a class="nav-link" data-section="aprobaciones" href="#"><i class="bi bi-check2-square"></i> Aprobaciones</a>
+      <a class="nav-link" data-section="acumulados" href="#"><i class="bi bi-graph-up"></i> Control y Acumulados</a>
+      <a class="nav-link" data-section="reportes" href="#"><i class="bi bi-file-earmark-pdf"></i> Reportes</a>
+      <a class="nav-link" data-section="configuracion" href="#"><i class="bi bi-gear"></i> Configuración</a>
+      <a class="nav-link" data-section="bitacora" href="#"><i class="bi bi-journal-check"></i> Bitácora Auditoría</a>
+      <a class="nav-link text-warning" href="#" onclick="doLogout()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div>
+        <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list"></i></button>
+        <strong id="topTitle">Panel Principal</strong>
+      </div>
+      <div><span class="text-muted">Administrador:</span> <strong id="adminName">Admin</strong></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="section active">
+      <div class="row g-3 mb-3">
+        <div class="col-md-3"><div class="stat-card"><div class="label">Funcionarios Activos</div><div class="value" id="stActivos">0</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="label">Horas Registradas</div><div class="value" id="stRegistradas">0h 0m</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="label">Horas Aprobadas</div><div class="value" id="stAprobadas">0h 0m</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="label">Días con Actividad</div><div class="value" id="stDias">0</div></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-8"><div class="card-panel"><h6>Tiempo Extra por Mes (Horas)</h6><canvas id="chartMes" height="120"></canvas></div></div>
+        <div class="col-md-4"><div class="card-panel"><h6>Distribución por Tipo</h6><canvas id="chartTipo" height="180"></canvas></div></div>
+      </div>
+    </section>
+
+    <!-- FUNCIONARIOS -->
+    <section id="funcionarios" class="section">
+      <div class="card-panel">
+        <div class="d-flex justify-content-between mb-3">
+          <h5 class="m-0">Gestión de Funcionarios</h5>
+          <button class="btn btn-primary" onclick="openFuncionarioModal()"><i class="bi bi-plus"></i> Nuevo Funcionario</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Identificación</th><th>Nombre Completo</th><th>Cargo</th><th>Dependencia</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="tblFuncionarios"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- REGISTRAR -->
+    <section id="registrar" class="section">
+      <div class="card-panel">
+        <h5>Registrar Jornada de Tiempo Extra</h5>
+        <form id="formRegistro" onsubmit="event.preventDefault(); guardarRegistro();">
+          <div class="row g-3">
+            <div class="col-md-6" style="position: relative;">
+              <label class="form-label">Funcionario Activo *</label>
+              <input type="text" id="regFuncionarioSearch" class="form-control" 
+                     placeholder="Escriba nombre o cédula para buscar..." 
+                     autocomplete="off" oninput="buscarFuncionario(this.value)">
+              <input type="hidden" id="regFuncionario">
+              <div id="funcionarioResults" class="list-group position-absolute w-100" 
+                   style="z-index: 1050; max-height: 250px; overflow-y: auto; display: none; 
+                          box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #dee2e6;
+                          border-radius: 0.25rem; top: 100%; margin-top: 0.25rem; background: #fff;"></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Tipo de Jornada *</label>
+              <select id="regTipo" class="form-select" required>
+                <option value="Diurna">Diurna</option><option value="Nocturna">Nocturna</option>
+                <option value="Dominical">Dominical</option><option value="Festiva">Festiva</option>
+                <option value="Otra">Otra</option>
+              </select>
+            </div>
+            <div class="col-md-3"><label class="form-label">Fecha Inicio *</label><input type="date" id="regFechaIni" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label">Hora Inicio *</label><input type="time" id="regHoraIni" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label">Fecha Fin *</label><input type="date" id="regFechaFin" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label">Hora Fin *</label><input type="time" id="regHoraFin" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label">Descanso (min)</label><input type="number" id="regDescanso" class="form-control" value="0" min="0"></div>
+            <div class="col-md-3"><label class="form-label">Duración Calculada</label><input type="text" id="regDuracion" class="form-control" readonly></div>
+            <div class="col-md-12"><label class="form-label">Motivo *</label><input type="text" id="regMotivo" class="form-control" required></div>
+            <div class="col-md-12"><label class="form-label">Actividad Realizada *</label><textarea id="regActividad" class="form-control" rows="2" required></textarea></div>
+            <div class="col-md-12"><label class="form-label">Observaciones</label><textarea id="regObs" class="form-control" rows="2"></textarea></div>
+          </div>
+          <div class="mt-3">
+            <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Guardar Registro</button>
+            <button type="reset" class="btn btn-secondary">Limpiar</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section id="historial" class="section">
+      <div class="card-panel">
+        <h5>Historial de Registros</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Cons.</th><th>Funcionario</th><th>Dependencia</th><th>Fecha Inicio</th><th>Duración</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="tblHistorial"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- APROBACIONES -->
+    <section id="aprobaciones" class="section">
+      <div class="card-panel">
+        <h5>Registros Pendientes de Revisión</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Cons.</th><th>Funcionario</th><th>Fechas/Horas</th><th>Duración</th><th>Motivo</th><th>Acción</th></tr></thead>
+            <tbody id="tblAprobaciones"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACUMULADOS -->
+    <section id="acumulados" class="section">
+      <div class="card-panel">
+        <h5>Acumulados por Funcionario</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Funcionario</th><th>Jornadas</th><th>Días Calendario</th><th>Total Minutos</th><th>Total Horas</th><th>Equivalencia Días</th></tr></thead>
+            <tbody id="tblAcumulados"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORTES -->
+    <section id="reportes" class="section">
+      <div class="card-panel">
+        <h5>Generador de Reportes</h5>
+        <div class="row g-3 mb-3">
+          <div class="col-md-3"><label class="form-label">Funcionario</label><select id="repFuncionario" class="form-select"><option value="">Todos</option></select></div>
+          <div class="col-md-3"><label class="form-label">Estado</label><select id="repEstado" class="form-select"><option value="">Todos</option><option value="aprobado">Aprobados</option><option value="pendiente">Pendientes</option><option value="rechazado">Rechazados</option></select></div>
+          <div class="col-md-3"><label class="form-label">Fecha Desde</label><input type="date" id="repDesde" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Fecha Hasta</label><input type="date" id="repHasta" class="form-control"></div>
+        </div>
+        <button class="btn btn-danger" onclick="exportarPDF()"><i class="bi bi-file-earmark-pdf"></i> Exportar PDF</button>
+      </div>
+    </section>
+
+    <!-- CONFIGURACIÓN -->
+    <section id="configuracion" class="section">
+      <div class="card-panel">
+        <h5>Parámetros del Sistema</h5>
+        <form id="formConfig" onsubmit="event.preventDefault(); guardarConfig();">
+          <div class="mb-3"><label class="form-label">Nombre Institución</label><input type="text" id="cfgNombre" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Duración Jornada Diaria (Minutos)</label><input type="number" id="cfgJornada" class="form-control" required><small class="text-muted">Ej: 480 min = 8 horas</small></div>
+          <div class="mb-3"><label class="form-label">Nueva Contraseña (opcional, mín. 6 caracteres)</label><input type="password" id="cfgClave" class="form-control" minlength="6"></div>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar Cambios</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- BITÁCORA -->
+    <section id="bitacora" class="section">
+      <div class="card-panel">
+        <h5>Auditoría de Acciones</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Fecha/Hora</th><th>Admin</th><th>Acción</th><th>ID Registro</th><th>Motivo</th></tr></thead>
+            <tbody id="tblBitacora"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL FUNCIONARIO -->
+<div class="modal fade" id="modalFuncionario" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formFuncionario" onsubmit="event.preventDefault(); guardarFuncionario();">
+        <div class="modal-header"><h5 class="modal-title">Funcionario</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" id="funcId">
+          <div class="mb-2"><label class="form-label">Identificación *</label><input type="text" id="funcIdentificacion" class="form-control" required></div>
+          <div class="mb-2"><label class="form-label">Nombre Completo *</label><input type="text" id="funcNombres" class="form-control" required></div>
+          <div class="mb-2"><label class="form-label">Cargo</label><input type="text" id="funcCargo" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Dependencia</label><input type="text" id="funcDependencia" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Correo</label><input type="email" id="funcCorreo" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Estado</label><select id="funcEstado" class="form-select"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
+          <div class="mb-2"><label class="form-label">Observaciones</label><textarea id="funcObs" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- LOADER & TOASTS -->
+<div class="loader-overlay" id="loader"><div class="spinner"></div><div>Procesando...</div></div>
+<div class="toast-container" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+const APP = { token: null, user: null, chartMes: null, chartTipo: null };
+let funcionariosCache = [];
+
+// ============================================================
+//  DE GOOGLE APPS SCRIPT (WEB APP)
+// ============================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPyUlSPVL2BCt72xAlHRNg-7OTdM4S0JYHUPedPUVghjMxW-fWqcoDFYsYVMo2IuDn/exec';
+
+// ============================================================
+// UTILIDADES Y COMUNICACIÓN FETCH (PARA GITHUB PAGES)
+// ============================================================
+function showLoader(show) { document.getElementById('loader').classList.toggle('active', show); }
+function toast(msg, type='success') {
+  const c = document.getElementById('toasts');
+  const colors = { success:'bg-success', error:'bg-danger', warning:'bg-warning', info:'bg-info' };
+  const el = document.createElement('div');
+  el.className = `toast align-items-center text-white ${colors[type]} border-0 show`;
+  el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+  c.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function call(fn, ...args) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ fn, args }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain evita bloqueos CORS estrictos en Apps Script
+      });
+      
+      const result = await response.json();
+      if (result.success !== false) {
+        resolve(result.data !== undefined ? result.data : result);
+      } else {
+        throw new Error(result.message || 'Error en el servidor');
+      }
+    } catch (err) {
+      toast(err.message || 'Error de conexión', 'error');
+      reject(err);
+    }
+  });
+}
+
+function fmtDuracion(min) {
+  min = parseInt(min) || 0;
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${h}h ${m}m`;
+}
+function badgeEstado(e) {
+  const cls = { aprobado:'badge-aprobado', rechazado:'badge-rechazado', pendiente:'badge-pendiente' };
+  return `<span class="badge-estado ${cls[e]||'badge-pendiente'}">${(e||'pendiente').toUpperCase()}</span>`;
+}
+
+// ============================================================
+// NAVEGACIÓN
+// ============================================================
+document.querySelectorAll('.sidebar .nav-link[data-section]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const sec = a.dataset.section;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(sec).classList.add('active');
+    document.querySelectorAll('.sidebar .nav-link').forEach(n => n.classList.remove('active'));
+    a.classList.add('active');
+    document.getElementById('topTitle').textContent = a.textContent.trim();
+    loadSection(sec);
+  });
+});
+
+function loadSection(sec) {
+  if (sec === 'dashboard') loadDashboard();
+  else if (sec === 'funcionarios') loadFuncionarios();
+  else if (sec === 'registrar') loadFormRegistro();
+  else if (sec === 'historial') loadHistorial();
+  else if (sec === 'aprobaciones') loadAprobaciones();
+  else if (sec === 'acumulados') loadAcumulados();
+  else if (sec === 'reportes') loadReportes();
+  else if (sec === 'configuracion') loadConfig();
+  else if (sec === 'bitacora') loadBitacora();
+}
+
+// ============================================================
+// LOGIN / LOGOUT
+// ============================================================
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  err.classList.add('d-none');
+  showLoader(true);
+  try {
+    const r = await call('loginAdmin', u, p);
+    if (r.success) {
+      APP.token = r.token; APP.user = r.user;
+      document.getElementById('loginView').classList.add('d-none');
+      document.getElementById('appView').classList.remove('d-none');
+      document.getElementById('adminName').textContent = r.user;
+      loadDashboard();
+    } else {
+      err.textContent = r.message; err.classList.remove('d-none');
+    }
+  } catch (e) { err.textContent = 'Error de conexión'; err.classList.remove('d-none'); }
+  finally { showLoader(false); }
+}
+async function doLogout() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  try { await call('cerrarSesion', APP.token); } catch(e){}
+  APP.token = null; APP.user = null;
+  document.getElementById('appView').classList.add('d-none');
+  document.getElementById('loginView').classList.remove('d-none');
+  document.getElementById('loginPass').value = '';
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDashboard() {
+  showLoader(true);
+  try {
+    const d = await call('obtenerEstadisticasDashboard', APP.token);
+    document.getElementById('stActivos').textContent = d.funcionariosActivos;
+    document.getElementById('stRegistradas').textContent = d.horasRegistradas;
+    document.getElementById('stAprobadas').textContent = d.horasAprobadas;
+    document.getElementById('stDias').textContent = d.diasCalendario;
+    renderChartMes(d.graficoMeses);
+    renderChartTipo(d.distribucionTipo);
+  } finally { showLoader(false); }
+}
+function renderChartMes(data) {
+  const ctx = document.getElementById('chartMes');
+  if (APP.chartMes) APP.chartMes.destroy();
+  APP.chartMes = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: data.labels, datasets: [{ label: 'Horas', data: data.data, backgroundColor: '#415a77' }] },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+}
+function renderChartTipo(data) {
+  const ctx = document.getElementById('chartTipo');
+  if (APP.chartTipo) APP.chartTipo.destroy();
+  const labels = Object.keys(data), values = Object.values(data);
+  APP.chartTipo = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: ['#0d1b2a','#1b263b','#415a77','#778da9','#e0e1dd'] }] },
+    options: { responsive: true }
+  });
+}
+
+// ============================================================
+// FUNCIONARIOS
+// ============================================================
+async function loadFuncionarios() {
+  showLoader(true);
+  try {
+    const lista = await call('obtenerFuncionarios', APP.token, false);
+    const tb = document.getElementById('tblFuncionarios');
+    tb.innerHTML = lista.map(f => `
+      <tr>
+        <td>${f.identificacion}</td>
+        <td>${f.nombres}</td>
+        <td>${f.cargo||''}</td>
+        <td>${f.dependencia||''}</td>
+        <td><span class="badge-estado ${f.estado==='activo'?'badge-aprobado':'badge-rechazado'}">${f.estado}</span></td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary" onclick='openFuncionarioModal(${JSON.stringify(f)})'><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-danger" onclick="eliminarFuncionario('${f.id}')"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">Sin registros</td></tr>';
+  } finally { showLoader(false); }
+}
+function openFuncionarioModal(f) {
+  document.getElementById('formFuncionario').reset();
+  document.getElementById('funcId').value = '';
+  if (f) {
+    document.getElementById('funcId').value = f.id;
+    document.getElementById('funcIdentificacion').value = f.identificacion;
+    document.getElementById('funcNombres').value = f.nombres;
+    document.getElementById('funcCargo').value = f.cargo || '';
+    document.getElementById('funcDependencia').value = f.dependencia || '';
+    document.getElementById('funcCorreo').value = f.correo || '';
+    document.getElementById('funcEstado').value = f.estado;
+    document.getElementById('funcObs').value = f.observaciones || '';
+  }
+  new bootstrap.Modal(document.getElementById('modalFuncionario')).show();
+}
+async function guardarFuncionario() {
+  const data = {
+    id: document.getElementById('funcId').value || null,
+    identificacion: document.getElementById('funcIdentificacion').value,
+    nombres: document.getElementById('funcNombres').value,
+    cargo: document.getElementById('funcCargo').value,
+    dependencia: document.getElementById('funcDependencia').value,
+    correo: document.getElementById('funcCorreo').value,
+    estado: document.getElementById('funcEstado').value,
+    observaciones: document.getElementById('funcObs').value
+  };
+  showLoader(true);
+  try {
+    const r = await call('guardarFuncionario', data, APP.token);
+    if (r.success) {
+      toast(r.message); bootstrap.Modal.getInstance(document.getElementById('modalFuncionario')).hide();
+      loadFuncionarios();
+    } else toast(r.message, 'error');
+  } finally { showLoader(false); }
+}
+async function eliminarFuncionario(id) {
+  if (!confirm('¿Eliminar funcionario?')) return;
+  showLoader(true);
+  try {
+    const r = await call('eliminarFuncionario', id, APP.token);
+    toast(r.message, r.success ? 'success' : 'error');
+    if (r.success) loadFuncionarios();
+  } finally { showLoader(false); }
+}
+
+// ============================================================
+// REGISTRO TIEMPO EXTRA - BÚSQUEDA DIRECTA CORREGIDA
+// ============================================================
+async function loadFormRegistro() {
+  showLoader(true);
+  try {
+    const funcs = await call('obtenerFuncionarios', APP.token, true);
+    funcionariosCache = funcs || [];
+    
+    document.getElementById('regFuncionarioSearch').value = '';
+    document.getElementById('regFuncionario').value = '';
+    document.getElementById('funcionarioResults').style.display = 'none';
+  } catch(e) {
+    toast('Error al cargar funcionarios: ' + e.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+}
+
+function buscarFuncionario(texto) {
+  const searchTerm = texto.toLowerCase().trim();
+  const resultsDiv = document.getElementById('funcionarioResults');
+  
+  if (searchTerm.length < 1) {
+    resultsDiv.style.display = 'none';
+    return;
+  }
+  
+  const filtered = funcionariosCache.filter(f => {
+    const nombre = (f.nombres || '').toLowerCase();
+    const cedula = String(f.identificacion || '').toLowerCase();
+    return nombre.includes(searchTerm) || cedula.includes(searchTerm);
+  });
+  
+  if (filtered.length > 0) {
+    resultsDiv.innerHTML = filtered.map(f => `
+      <div class="list-group-item funcionario-item" 
+           style="cursor: pointer;"
+           onclick="selectFuncionario('${f.id}', '${f.nombres.replace(/'/g, "\\'")}', '${f.identificacion}')">
+        <div class="fw-bold">${f.nombres}</div>
+        <div class="text-muted" style="font-size: 0.85rem;">Cédula: ${f.identificacion} | Cargo: ${f.cargo || 'N/A'}</div>
+      </div>
+    `).join('');
+  } else {
+    resultsDiv.innerHTML = '<div class="list-group-item text-muted p-2">No se encontraron funcionarios</div>';
+  }
+  resultsDiv.style.display = 'block';
+}
+
+function selectFuncionario(id, nombre, identificacion) {
+  document.getElementById('regFuncionario').value = id;
+  document.getElementById('regFuncionarioSearch').value = `${nombre} - ${identificacion}`;
+  document.getElementById('funcionarioResults').style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  const searchInput = document.getElementById('regFuncionarioSearch');
+  const resultsDiv = document.getElementById('funcionarioResults');
+  if (searchInput && resultsDiv && !searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+    resultsDiv.style.display = 'none';
+  }
+});
+
+['regFechaIni','regHoraIni','regFechaFin','regHoraFin','regDescanso'].forEach(id => {
+  document.getElementById(id).addEventListener('change', calcDuracion);
+});
+
+async function calcDuracion() {
+  const fi = document.getElementById('regFechaIni').value;
+  const hi = document.getElementById('regHoraIni').value;
+  const ff = document.getElementById('regFechaFin').value;
+  const hf = document.getElementById('regHoraFin').value;
+  const d = document.getElementById('regDescanso').value;
+  if (!fi || !hi || !ff || !hf) { document.getElementById('regDuracion').value = ''; return; }
+  try {
+    const r = await call('calcularMinutos', fi, hi, ff, hf, d);
+    document.getElementById('regDuracion').value = r.error ? r.error : fmtDuracion(r.duracionMinutos);
+  } catch(e){ document.getElementById('regDuracion').value = 'Error'; }
+}
+
+async function guardarRegistro() {
+  const idFuncionario = document.getElementById('regFuncionario').value;
+  if (!idFuncionario) {
+    toast('Por favor seleccione un funcionario válido de la lista', 'error');
+    return;
+  }
+  
+  const data = {
+    idFuncionario: idFuncionario,
+    fechaInicio: document.getElementById('regFechaIni').value,
+    horaInicio: document.getElementById('regHoraIni').value,
+    fechaFin: document.getElementById('regFechaFin').value,
+    horaFin: document.getElementById('regHoraFin').value,
+    descanso: document.getElementById('regDescanso').value,
+    tipoJornada: document.getElementById('regTipo').value,
+    motivo: document.getElementById('regMotivo').value,
+    actividad: document.getElementById('regActividad').value,
+    observaciones: document.getElementById('regObs').value
+  };
+  showLoader(true);
+  try {
+    const r = await call('guardarRegistroTiempo', data, APP.token);
+    toast(r.message, r.success ? 'success' : 'error');
+    if (r.success) document.getElementById('formRegistro').reset();
+  } finally { showLoader(false); }
+}
+
+// ============================================================
+// HISTORIAL
+// ============================================================
+async function loadHistorial() {
+  showLoader(true);
+  try {
+    const regs = await call('obtenerRegistrosTiempo', APP.token, {});
+    const tb = document.getElementById('tblHistorial');
+    tb.innerHTML = regs.map(r => `
+      <tr>
+        <td>${r.consecutivo}</td>
+        <td>${r.nombreFuncionario}</td>
+        <td>${r.dependencia}</td>
+        <td>${r.fechaInicio} ${r.horaInicio}</td>
+        <td>${fmtDuracion(r.duracionMinutos)}</td>
+        <td>${r.tipoJornada}</td>
+        <td>${badgeEstado(r.estado)}</td>
+        <td><button class="btn btn-sm btn-outline-danger" onclick="eliminarRegistro('${r.idRegistro}')"><i class="bi bi-trash"></i></button></td>
+      </tr>`).join('') || '<tr><td colspan="8" class="text-center text-muted">Sin registros</td></tr>';
+  } finally { showLoader(false); }
+}
+async function eliminarRegistro(id) {
+  if (!confirm('¿Eliminar registro?')) return;
+  showLoader(true);
+  try {
+    const r = await call('eliminarRegistro', id, APP.token);
+    toast(r.message, r.success ? 'success' : 'error');
+    if (r.success) { loadHistorial(); loadAprobaciones(); }
+  } finally { showLoader(false); }
+}
+
+// ============================================================
+// APROBACIONES
+// ============================================================
+async function loadAprobaciones() {
+  showLoader(true);
+  try {
+    const regs = await call('obtenerRegistrosTiempo', APP.token, { estado: 'pendiente' });
+    const tb = document.getElementById('tblAprobaciones');
+    tb.innerHTML = regs.map(r => `
+      <tr>
+        <td>${r.consecutivo}</td>
+        <td>${r.nombreFuncionario}</td>
+        <td>${r.fechaInicio} ${r.horaInicio} → ${r.fechaFin} ${r.horaFin}</td>
+        <td>${fmtDuracion(r.duracionMinutos)}</td>
+        <td>${r.motivo}</td>
+        <td>
+          <button class="btn btn-sm btn-success" onclick="aprobar('${r.idRegistro}')"><i class="bi bi-check"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="rechazar('${r.idRegistro}')"><i class="bi bi-x"></i></button>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">No hay registros pendientes</td></tr>';
+  } finally { showLoader(false); }
+}
+async function aprobar(id) {
+  const obs = prompt('Observación de aprobación (opcional):') || '';
+  showLoader(true);
+  try {
+    const r = await call('cambiarEstadoRegistro', id, 'aprobado', obs, APP.token);
+    toast(r.message, r.success ? 'success' : 'error');
+    if (r.success) loadAprobaciones();
+  } finally { showLoader(false); }
+}
+async function rechazar(id) {
+  const obs = prompt('Motivo del rechazo:');
+  if (!obs) { toast('Debe indicar un motivo', 'warning'); return; }
+  showLoader(true);
+  try {
+    const r = await call('cambiarEstadoRegistro', id, 'rechazado', obs, APP.token);
+    toast(r.message, r.success ? 'success' : 'error');
+    if (r.success) loadAprobaciones();
+  } finally { showLoader(false); }
+}
+
+// ============================================================
+// ACUMULADOS
+// ============================================================
+async function loadAcumulados() {
+  showLoader(true);
+  try {
+    const data = await call('obtenerAcumulados', APP.token);
+    const tb = document.getElementById('tblAcumulados');
+    tb.innerHTML = data.map(a => `
+      <tr>
+        <td>${a.funcionario}</td><td>${a.jornadas}</td><td>${a.diasCalendario}</td>
+        <td>${a.totalMinutos}</td><td>${a.totalHorasMin}</td><td>${a.equivalenciaDias}</td>
+      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>';
+  } finally { showLoader(false); }
+}
+
+// ============================================================
+// REPORTES
+// ============================================================
+async function loadReportes() {
+  try {
+    const funcs = await call('obtenerFuncionarios', APP.token, false);
+    const sel = document.getElementById('repFuncionario');
+    sel.innerHTML = '<option value="">Todos</option>' + funcs.map(f => `<option value="${f.id}">${f.nombres}</option>`).join('');
+  } catch(e){}
+}
+async function exportarPDF() {
+  showLoader(true);
+  try {
+    const filtros = {
+      funcionario: document.getElementById('repFuncionario').value || null,
+      estado: document.getElementById('repEstado').value || null,
+      fechaDesde: document.getElementById('repDesde').value || null,
+      fechaHasta: document.getElementById('repHasta').value || null
+    };
+    const data = await call('generarDatosReporte', filtros, APP.token);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(16); doc.text(data.institucion, 14, 18);
+    doc.setFontSize(11); doc.text('Reporte de Tiempo Extra Laborado', 14, 26);
+    doc.setFontSize(9); doc.text(`Generado: ${data.fechaGeneracion}`, 14, 33);
+    doc.text(`Total registros: ${data.totalRegistros} | Total minutos: ${data.totalMinutos}`, 14, 39);
+    const rows = data.registros.map(r => [
+      r.consecutivo, r.nombreFuncionario, r.dependencia,
+      `${r.fechaInicio} ${r.horaInicio}`, fmtDuracion(r.duracionMinutos),
+      r.tipoJornada, r.estado, r.motivo
+    ]);
+    doc.autoTable({
+      startY: 45,
+      head: [['Cons.','Funcionario','Dependencia','Fecha/Hora','Duración','Tipo','Estado','Motivo']],
+      body: rows,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [13,27,42] }
+    });
+    doc.save(`ReporteTiempoExtra_${new Date().toISOString().substring(0,10)}.pdf`);
+    toast('PDF generado correctamente');
+  } catch(e) { toast('Error al generar PDF', 'error'); }
+  finally { showLoader(false); }
+}
+
+// ============================================================
+// CONFIGURACIÓN
+// ============================================================
+async function loadConfig() {
+  showLoader(true);
+  try {
+    const c = await call('obtenerConfiguracion', APP.token);
+    document.getElementById('cfgNombre').value = c.NOMBRE_INSTITUCION || '';
+    document.getElementById('cfgJornada').value = c.JORNADA_DIARIA_MINUTOS || 480;
+  } finally { showLoader(false); }
+}
+async function guardarConfig() {
+  const data = {
+    NOMBRE_INSTITUCION: document.getElementById('cfgNombre').value,
+    JORNADA_DIARIA_MINUTOS: document.getElementById('cfgJornada').value,
+    NUEVA_CLAVE: document.getElementById('cfgClave').value
+  };
+  showLoader(true);
+  try {
+    const r = await call('guardarConfiguracion', data, APP.token);
+    toast(r.message, r.success ? 'success' : 'error');
+    if (r.success) document.getElementById('cfgClave').value = '';
+  } finally { showLoader(false); }
+}
+
+// ============================================================
+// BITÁCORA
+// ============================================================
+async function loadBitacora() {
+  showLoader(true);
+  try {
+    const lista = await call('obtenerBitacora', APP.token, 200);
+    const tb = document.getElementById('tblBitacora');
+    tb.innerHTML = lista.map(b => `
+      <tr>
+        <td>${b.fechaHora}</td><td>${b.administrador}</td>
+        <td><span class="badge bg-secondary">${b.accion}</span></td>
+        <td>${b.idRegistro}</td><td>${b.motivo||''}</td>
+      </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted">Sin eventos</td></tr>';
+  } finally { showLoader(false); }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('loginUser').focus();
+</script>
 </body>
 </html>
