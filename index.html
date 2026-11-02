@@ -101,7 +101,6 @@
     display: flex;
     align-items: center;
   }
-  /* --- FIN ESTILOS DASHBOARD --- */
 
   .card-panel { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.04); margin-bottom: 1.5rem; border: 1px solid rgba(0,0,0,0.04); }
   .table thead th { background: var(--primary); color: #fff; font-size: .8rem; text-transform: uppercase; letter-spacing: .5px; border: none; font-weight: 600; }
@@ -163,7 +162,7 @@
     <nav class="nav flex-column mt-3">
       <a class="nav-link active" data-section="dashboard" href="#"><i class="bi bi-speedometer2"></i> Panel Principal</a>
       <a class="nav-link" data-section="funcionarios" href="#"><i class="bi bi-people"></i> Gestión Funcionarios</a>
-      <a class="nav-link" data-section="registrar" href="#"><i class="bi bi-plus-circle"></i> Registrar Tiempo Extra</a>
+      <a class="nav-link" data-section="registrar" href="#"><i class="bi bi-plus-circle"></i> Registrar Tiempo Extra / Resta</a>
       <a class="nav-link" data-section="historial" href="#"><i class="bi bi-journal-text"></i> Historial de Registros</a>
       <a class="nav-link" data-section="aprobaciones" href="#"><i class="bi bi-check2-square"></i> Aprobaciones</a>
       <a class="nav-link" data-section="acumulados" href="#"><i class="bi bi-graph-up"></i> Control y Acumulados</a>
@@ -193,7 +192,7 @@
       </div>
     </div>
 
-    <!-- DASHBOARD (REDISEÑADO) -->
+    <!-- DASHBOARD -->
     <section id="dashboard" class="section active">
       <div class="row g-4 mb-4">
         <div class="col-md-6 col-xl-3">
@@ -202,7 +201,7 @@
               <div class="stat-icon-wrap" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;">
                 <i class="bi bi-people-fill"></i>
               </div>
-              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> 12%</span>
+              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> Activos</span>
             </div>
             <div class="stat-value-modern" id="stActivos">0</div>
             <div class="stat-label-modern">Funcionarios Activos</div>
@@ -214,7 +213,7 @@
               <div class="stat-icon-wrap" style="background: rgba(253, 126, 20, 0.1); color: #fd7e14;">
                 <i class="bi bi-clock-history"></i>
               </div>
-              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> 8%</span>
+              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> Bruto</span>
             </div>
             <div class="stat-value-modern" id="stRegistradas">0h 0m</div>
             <div class="stat-label-modern">Horas Registradas</div>
@@ -226,10 +225,10 @@
               <div class="stat-icon-wrap" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
                 <i class="bi bi-check-circle-fill"></i>
               </div>
-              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> 15%</span>
+              <span class="trend-badge trend-up"><i class="bi bi-arrow-up-short"></i> Neto</span>
             </div>
             <div class="stat-value-modern" id="stAprobadas">0h 0m</div>
-            <div class="stat-label-modern">Horas Aprobadas</div>
+            <div class="stat-label-modern">Horas Aprobadas (Neto)</div>
           </div>
         </div>
         <div class="col-md-6 col-xl-3">
@@ -238,7 +237,7 @@
               <div class="stat-icon-wrap" style="background: rgba(111, 66, 193, 0.1); color: #6f42c1;">
                 <i class="bi bi-calendar-check-fill"></i>
               </div>
-              <span class="trend-badge trend-neutral"><i class="bi bi-dash"></i> Este mes</span>
+              <span class="trend-badge trend-neutral"><i class="bi bi-dash"></i> Registro</span>
             </div>
             <div class="stat-value-modern" id="stDias">0</div>
             <div class="stat-label-modern">Días con Actividad</div>
@@ -251,10 +250,6 @@
           <div class="card-panel-modern">
             <div class="card-panel-header">
               <h6 class="card-panel-title"><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Tiempo Extra por Mes</h6>
-              <select class="form-select form-select-sm" style="width: auto; border-radius: 8px; border-color: #e9ecef;">
-                <option>2026</option>
-                <option>2025</option>
-              </select>
             </div>
             <div style="height: 280px;">
               <canvas id="chartMes"></canvas>
@@ -291,10 +286,10 @@
       </div>
     </section>
 
-    <!-- REGISTRAR -->
+    <!-- REGISTRAR TIEMPO / RESTA -->
     <section id="registrar" class="section">
       <div class="card-panel">
-        <h5 class="fw-bold mb-4">Registrar Jornada de Tiempo Extra</h5>
+        <h5 class="fw-bold mb-4">Registrar Jornada (Suma o Resta de Tiempo)</h5>
         <form id="formRegistro" onsubmit="event.preventDefault(); guardarRegistro();">
           <div class="row g-3">
             <div class="col-md-6" style="position: relative;">
@@ -308,27 +303,43 @@
                           box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #dee2e6;
                           border-radius: 8px; top: 100%; margin-top: 4px; background: #fff;"></div>
             </div>
+
             <div class="col-md-6">
               <label class="form-label fw-semibold">Tipo de Jornada *</label>
-              <select id="regTipo" class="form-select" required>
-                <option value="Diurna">Diurna</option><option value="Nocturna">Nocturna</option>
-                <option value="Dominical">Dominical</option><option value="Festiva">Festiva</option>
+              <select id="regTipo" class="form-select" required onchange="evaluarTipoJornada(this.value)">
+                <option value="Diurna">Diurna (+)</option>
+                <option value="Nocturna">Nocturna (+)</option>
+                <option value="Dominical">Dominical (+)</option>
+                <option value="Festiva">Festiva (+)</option>
+                <option value="Compensatorio (Resta)">Compensatorio (Resta -)</option>
+                <option value="Descuento (Resta)">Descuento (Resta -)</option>
                 <option value="Otra">Otra</option>
               </select>
             </div>
+
+            <div class="col-md-12">
+              <div class="form-check form-switch p-3 border rounded bg-light">
+                <input class="form-check-input ms-0 me-2" type="checkbox" id="regEsResta" onchange="calcDuracion()">
+                <label class="form-check-label fw-bold text-danger" for="regEsResta">
+                  <i class="bi bi-dash-circle-fill me-1"></i> RESTAR ESTE TIEMPO DEL ACUMULADO DEL FUNCIONARIO (COMPENSATORIO / DESCUENTO)
+                </label>
+              </div>
+            </div>
+
             <div class="col-md-3"><label class="form-label fw-semibold">Fecha Inicio *</label><input type="date" id="regFechaIni" class="form-control" required></div>
             <div class="col-md-3"><label class="form-label fw-semibold">Hora Inicio *</label><input type="time" id="regHoraIni" class="form-control" required></div>
             <div class="col-md-3"><label class="form-label fw-semibold">Fecha Fin *</label><input type="date" id="regFechaFin" class="form-control" required></div>
             <div class="col-md-3"><label class="form-label fw-semibold">Hora Fin *</label><input type="time" id="regHoraFin" class="form-control" required></div>
             <div class="col-md-3"><label class="form-label fw-semibold">Descanso (min)</label><input type="number" id="regDescanso" class="form-control" value="0" min="0"></div>
-            <div class="col-md-3"><label class="form-label fw-semibold">Duración Calculada</label><input type="text" id="regDuracion" class="form-control bg-light" readonly></div>
-            <div class="col-md-12"><label class="form-label fw-semibold">Motivo *</label><input type="text" id="regMotivo" class="form-control" required></div>
-            <div class="col-md-12"><label class="form-label fw-semibold">Actividad Realizada *</label><textarea id="regActividad" class="form-control" rows="2" required></textarea></div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Duración Calculada</label><input type="text" id="regDuracion" class="form-control bg-light fw-bold" readonly></div>
+
+            <div class="col-md-12"><label class="form-label fw-semibold">Motivo *</label><input type="text" id="regMotivo" class="form-control" placeholder="Ej: Disfrute de tiempo compensatorio acumulado" required></div>
+            <div class="col-md-12"><label class="form-label fw-semibold">Actividad / Soporte *</label><textarea id="regActividad" class="form-control" rows="2" required></textarea></div>
             <div class="col-md-12"><label class="form-label fw-semibold">Observaciones</label><textarea id="regObs" class="form-control" rows="2"></textarea></div>
           </div>
           <div class="mt-4 d-flex gap-2">
             <button type="submit" class="btn btn-success px-4"><i class="bi bi-save me-1"></i> Guardar Registro</button>
-            <button type="reset" class="btn btn-light border">Limpiar</button>
+            <button type="reset" class="btn btn-light border" onclick="setTimeout(calcDuracion, 100)">Limpiar</button>
           </div>
         </form>
       </div>
@@ -363,10 +374,10 @@
     <!-- ACUMULADOS -->
     <section id="acumulados" class="section">
       <div class="card-panel">
-        <h5 class="fw-bold mb-4">Acumulados por Funcionario</h5>
+        <h5 class="fw-bold mb-4">Acumulados Netos por Funcionario</h5>
         <div class="table-responsive">
           <table class="table table-hover align-middle">
-            <thead><tr><th>Funcionario</th><th>Jornadas</th><th>Días Calendario</th><th>Total Minutos</th><th>Total Horas</th><th>Equivalencia Días</th></tr></thead>
+            <thead><tr><th>Funcionario</th><th>Registros</th><th>Días Calendario</th><th>Total Minutos</th><th>Total Horas Netas</th><th>Equivalencia Días</th></tr></thead>
             <tbody id="tblAcumulados"></tbody>
           </table>
         </div>
@@ -456,14 +467,11 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // ============================================================
-// ESTADO GLOBAL
+// ESTADO GLOBAL Y CONFIGURACIÓN
 // ============================================================
 const APP = { token: null, user: null, chartMes: null, chartTipo: null };
 let funcionariosCache = [];
 
-// ============================================================
-//  DE GOOGLE APPS SCRIPT (WEB APP)
-// ============================================================
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPyUlSPVL2BCt72xAlHRNg-7OTdM4S0JYHUPedPUVghjMxW-fWqcoDFYsYVMo2IuDn/exec';
 
 // ============================================================
@@ -509,9 +517,12 @@ function call(fn, ...args) {
 
 function fmtDuracion(min) {
   min = parseInt(min) || 0;
-  const h = Math.floor(min / 60), m = min % 60;
-  return `${h}h ${m}m`;
+  const esNegativo = min < 0;
+  const absMin = Math.abs(min);
+  const h = Math.floor(absMin / 60), m = absMin % 60;
+  return `${esNegativo ? '-' : ''}${h}h ${m}m`;
 }
+
 function badgeEstado(e) {
   const cls = { aprobado:'badge-aprobado', rechazado:'badge-rechazado', pendiente:'badge-pendiente' };
   return `<span class="badge-estado ${cls[e]||'badge-pendiente'}">${(e||'pendiente').toUpperCase()}</span>`;
@@ -530,7 +541,6 @@ document.querySelectorAll('.sidebar .nav-link[data-section]').forEach(a => {
     a.classList.add('active');
     document.getElementById('topTitle').textContent = a.textContent.trim();
     loadSection(sec);
-    // Cerrar sidebar en móvil al navegar
     if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('show');
   });
 });
@@ -570,6 +580,7 @@ async function doLogin() {
   } catch (e) { err.textContent = 'Error de conexión'; err.classList.remove('d-none'); }
   finally { showLoader(false); }
 }
+
 async function doLogout() {
   if (!confirm('¿Cerrar sesión?')) return;
   try { await call('cerrarSesion', APP.token); } catch(e){}
@@ -580,7 +591,7 @@ async function doLogout() {
 }
 
 // ============================================================
-// DASHBOARD (ACTUALIZADO CON GRÁFICOS MODERNOS)
+// DASHBOARD
 // ============================================================
 async function loadDashboard() {
   showLoader(true);
@@ -599,7 +610,6 @@ function renderChartMes(data) {
   const ctx = document.getElementById('chartMes').getContext('2d');
   if (APP.chartMes) APP.chartMes.destroy();
   
-  // Gradiente moderno para las barras
   const gradient = ctx.createLinearGradient(0, 0, 0, 400);
   gradient.addColorStop(0, 'rgba(13, 110, 253, 0.85)');
   gradient.addColorStop(1, 'rgba(13, 110, 253, 0.2)');
@@ -609,7 +619,7 @@ function renderChartMes(data) {
     data: { 
       labels: data.labels, 
       datasets: [{ 
-        label: 'Horas', 
+        label: 'Horas Netas', 
         data: data.data, 
         backgroundColor: gradient,
         borderRadius: 6,
@@ -651,8 +661,7 @@ function renderChartTipo(data) {
   const ctx = document.getElementById('chartTipo').getContext('2d');
   if (APP.chartTipo) APP.chartTipo.destroy();
   const labels = Object.keys(data), values = Object.values(data);
-  
-  const modernColors = ['#0d6efd', '#6f42c1', '#fd7e14', '#198754', '#0dcaf0'];
+  const modernColors = ['#0d6efd', '#6f42c1', '#fd7e14', '#198754', '#dc3545', '#0dcaf0'];
   
   APP.chartTipo = new Chart(ctx, {
     type: 'doughnut',
@@ -675,18 +684,12 @@ function renderChartTipo(data) {
         tooltip: {
           backgroundColor: '#0d1b2a',
           padding: 12,
-          cornerRadius: 8,
-          callbacks: {
-            label: function(context) {
-              return ` ${context.label}: ${context.raw}%`;
-            }
-          }
+          cornerRadius: 8
         }
       }
     }
   });
 
-  // Leyenda personalizada moderna
   const legendContainer = document.getElementById('chartTipoLegend');
   if (legendContainer) {
     legendContainer.innerHTML = labels.map((label, i) => `
@@ -695,7 +698,7 @@ function renderChartTipo(data) {
           <span style="width: 12px; height: 12px; border-radius: 4px; background: ${modernColors[i]};"></span>
           <span class="fw-semibold text-dark">${label}</span>
         </div>
-        <strong class="text-primary">${values[i]}%</strong>
+        <strong class="text-primary">${values[i]}</strong>
       </div>
     `).join('');
   }
@@ -723,6 +726,7 @@ async function loadFuncionarios() {
       </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Sin registros</td></tr>';
   } finally { showLoader(false); }
 }
+
 function openFuncionarioModal(f) {
   document.getElementById('formFuncionario').reset();
   document.getElementById('funcId').value = '';
@@ -738,6 +742,7 @@ function openFuncionarioModal(f) {
   }
   new bootstrap.Modal(document.getElementById('modalFuncionario')).show();
 }
+
 async function guardarFuncionario() {
   const data = {
     id: document.getElementById('funcId').value || null,
@@ -758,6 +763,7 @@ async function guardarFuncionario() {
     } else toast(r.message, 'error');
   } finally { showLoader(false); }
 }
+
 async function eliminarFuncionario(id) {
   if (!confirm('¿Eliminar funcionario?')) return;
   showLoader(true);
@@ -769,7 +775,7 @@ async function eliminarFuncionario(id) {
 }
 
 // ============================================================
-// REGISTRO TIEMPO EXTRA
+// REGISTRO TIEMPO / RESTA
 // ============================================================
 async function loadFormRegistro() {
   showLoader(true);
@@ -821,15 +827,17 @@ function selectFuncionario(id, nombre, identificacion) {
   document.getElementById('funcionarioResults').style.display = 'none';
 }
 
-document.addEventListener('click', function(e) {
-  const searchInput = document.getElementById('regFuncionarioSearch');
-  const resultsDiv = document.getElementById('funcionarioResults');
-  if (searchInput && resultsDiv && !searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
-    resultsDiv.style.display = 'none';
+function evaluarTipoJornada(tipo) {
+  const checkResta = document.getElementById('regEsResta');
+  if (tipo.includes('(Resta)')) {
+    checkResta.checked = true;
+  } else {
+    checkResta.checked = false;
   }
-});
+  calcDuracion();
+}
 
-['regFechaIni','regHoraIni','regFechaFin','regHoraFin','regDescanso'].forEach(id => {
+['regFechaIni','regHoraIni','regFechaFin','regHoraFin','regDescanso','regEsResta'].forEach(id => {
   document.getElementById(id).addEventListener('change', calcDuracion);
 });
 
@@ -839,10 +847,20 @@ async function calcDuracion() {
   const ff = document.getElementById('regFechaFin').value;
   const hf = document.getElementById('regHoraFin').value;
   const d = document.getElementById('regDescanso').value;
+  const esResta = document.getElementById('regEsResta').checked;
+
   if (!fi || !hi || !ff || !hf) { document.getElementById('regDuracion').value = ''; return; }
   try {
-    const r = await call('calcularMinutos', fi, hi, ff, hf, d);
-    document.getElementById('regDuracion').value = r.error ? r.error : fmtDuracion(r.duracionMinutos);
+    const r = await call('calcularMinutos', fi, hi, ff, hf, d, esResta);
+    if (r.error) {
+      document.getElementById('regDuracion').value = r.error;
+      document.getElementById('regDuracion').className = 'form-control bg-light text-danger fw-bold';
+    } else {
+      document.getElementById('regDuracion').value = fmtDuracion(r.duracionMinutos);
+      document.getElementById('regDuracion').className = r.duracionMinutos < 0 ? 
+        'form-control bg-danger bg-opacity-10 text-danger fw-bold' : 
+        'form-control bg-light text-success fw-bold';
+    }
   } catch(e){ document.getElementById('regDuracion').value = 'Error'; }
 }
 
@@ -860,6 +878,7 @@ async function guardarRegistro() {
     fechaFin: document.getElementById('regFechaFin').value,
     horaFin: document.getElementById('regHoraFin').value,
     descanso: document.getElementById('regDescanso').value,
+    esResta: document.getElementById('regEsResta').checked,
     tipoJornada: document.getElementById('regTipo').value,
     motivo: document.getElementById('regMotivo').value,
     actividad: document.getElementById('regActividad').value,
@@ -869,7 +888,11 @@ async function guardarRegistro() {
   try {
     const r = await call('guardarRegistroTiempo', data, APP.token);
     toast(r.message, r.success ? 'success' : 'error');
-    if (r.success) document.getElementById('formRegistro').reset();
+    if (r.success) {
+      document.getElementById('formRegistro').reset();
+      document.getElementById('regEsResta').checked = false;
+      calcDuracion();
+    }
   } finally { showLoader(false); }
 }
 
@@ -881,19 +904,25 @@ async function loadHistorial() {
   try {
     const regs = await call('obtenerRegistrosTiempo', APP.token, {});
     const tb = document.getElementById('tblHistorial');
-    tb.innerHTML = regs.map(r => `
+    tb.innerHTML = regs.map(r => {
+      const esResta = r.duracionMinutos < 0;
+      return `
       <tr>
         <td class="fw-semibold">#${r.consecutivo}</td>
         <td>${r.nombreFuncionario}</td>
         <td>${r.dependencia}</td>
         <td>${r.fechaInicio} ${r.horaInicio}</td>
-        <td class="fw-semibold">${fmtDuracion(r.duracionMinutos)}</td>
+        <td class="fw-semibold ${esResta ? 'text-danger' : 'text-success'}">
+          ${fmtDuracion(r.duracionMinutos)} ${esResta ? '(Resta)' : ''}
+        </td>
         <td>${r.tipoJornada}</td>
         <td>${badgeEstado(r.estado)}</td>
         <td><button class="btn btn-sm btn-light text-danger" onclick="eliminarRegistro('${r.idRegistro}')"><i class="bi bi-trash"></i></button></td>
-      </tr>`).join('') || '<tr><td colspan="8" class="text-center text-muted py-4">Sin registros</td></tr>';
+      </tr>`;
+    }).join('') || '<tr><td colspan="8" class="text-center text-muted py-4">Sin registros</td></tr>';
   } finally { showLoader(false); }
 }
+
 async function eliminarRegistro(id) {
   if (!confirm('¿Eliminar registro?')) return;
   showLoader(true);
@@ -912,20 +941,24 @@ async function loadAprobaciones() {
   try {
     const regs = await call('obtenerRegistrosTiempo', APP.token, { estado: 'pendiente' });
     const tb = document.getElementById('tblAprobaciones');
-    tb.innerHTML = regs.map(r => `
+    tb.innerHTML = regs.map(r => {
+      const esResta = r.duracionMinutos < 0;
+      return `
       <tr>
         <td class="fw-semibold">#${r.consecutivo}</td>
         <td>${r.nombreFuncionario}</td>
         <td><small class="text-muted">${r.fechaInicio} ${r.horaInicio}</small><br><small class="text-muted">→ ${r.fechaFin} ${r.horaFin}</small></td>
-        <td class="fw-semibold">${fmtDuracion(r.duracionMinutos)}</td>
+        <td class="fw-semibold ${esResta ? 'text-danger' : 'text-success'}">${fmtDuracion(r.duracionMinutos)}</td>
         <td>${r.motivo}</td>
         <td>
           <button class="btn btn-sm btn-success" onclick="aprobar('${r.idRegistro}')"><i class="bi bi-check-lg"></i></button>
           <button class="btn btn-sm btn-danger" onclick="rechazar('${r.idRegistro}')"><i class="bi bi-x-lg"></i></button>
         </td>
-      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">No hay registros pendientes</td></tr>';
+      </tr>`;
+    }).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">No hay registros pendientes</td></tr>';
   } finally { showLoader(false); }
 }
+
 async function aprobar(id) {
   const obs = prompt('Observación de aprobación (opcional):') || '';
   showLoader(true);
@@ -935,6 +968,7 @@ async function aprobar(id) {
     if (r.success) loadAprobaciones();
   } finally { showLoader(false); }
 }
+
 async function rechazar(id) {
   const obs = prompt('Motivo del rechazo:');
   if (!obs) { toast('Debe indicar un motivo', 'warning'); return; }
@@ -954,15 +988,18 @@ async function loadAcumulados() {
   try {
     const data = await call('obtenerAcumulados', APP.token);
     const tb = document.getElementById('tblAcumulados');
-    tb.innerHTML = data.map(a => `
+    tb.innerHTML = data.map(a => {
+      const esNegativo = a.totalMinutos < 0;
+      return `
       <tr>
         <td class="fw-semibold">${a.funcionario}</td>
         <td>${a.jornadas}</td>
         <td>${a.diasCalendario}</td>
-        <td>${a.totalMinutos}</td>
-        <td class="fw-semibold text-primary">${a.totalHorasMin}</td>
-        <td><span class="badge bg-info bg-opacity-10 text-info-emphasis">${a.equivalenciaDias} días</span></td>
-      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Sin datos</td></tr>';
+        <td class="${esNegativo ? 'text-danger fw-bold' : ''}">${a.totalMinutos}</td>
+        <td class="fw-semibold ${esNegativo ? 'text-danger' : 'text-primary'}">${a.totalHorasMin}</td>
+        <td><span class="badge ${esNegativo ? 'bg-danger' : 'bg-info'} bg-opacity-10 ${esNegativo ? 'text-danger' : 'text-info-emphasis'}">${a.equivalenciaDias} días</span></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Sin datos</td></tr>';
   } finally { showLoader(false); }
 }
 
@@ -976,6 +1013,7 @@ async function loadReportes() {
     sel.innerHTML = '<option value="">Todos</option>' + funcs.map(f => `<option value="${f.id}">${f.nombres}</option>`).join('');
   } catch(e){}
 }
+
 async function exportarPDF() {
   showLoader(true);
   try {
@@ -989,7 +1027,6 @@ async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Encabezado moderno del PDF
     doc.setFillColor(13, 27, 42);
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255, 255, 255);
@@ -998,12 +1035,12 @@ async function exportarPDF() {
     doc.text(data.institucion || 'Institución', 14, 20);
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
-    doc.text('Reporte de Tiempo Extra Laborado', 14, 30);
+    doc.text('Reporte de Tiempo Extra y Compensatorios', 14, 30);
     
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(9);
     doc.text(`Generado: ${data.fechaGeneracion}`, 14, 50);
-    doc.text(`Total registros: ${data.totalRegistros} | Total minutos: ${data.totalMinutos}`, 14, 56);
+    doc.text(`Total registros: ${data.totalRegistros} | Balance Neto Minutos: ${data.totalMinutos}`, 14, 56);
     
     const rows = data.registros.map(r => [
       r.consecutivo, r.nombreFuncionario, r.dependencia,
@@ -1037,6 +1074,7 @@ async function loadConfig() {
     document.getElementById('cfgJornada').value = c.JORNADA_DIARIA_MINUTOS || 480;
   } finally { showLoader(false); }
 }
+
 async function guardarConfig() {
   const data = {
     NOMBRE_INSTITUCION: document.getElementById('cfgNombre').value,
@@ -1070,9 +1108,7 @@ async function loadBitacora() {
   } finally { showLoader(false); }
 }
 
-// ============================================================
 // INIT
-// ============================================================
 document.getElementById('loginUser').focus();
 </script>
 </body>
