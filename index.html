@@ -1,833 +1,1019 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<base target="_top">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestión de Tiempos y Compensatorios</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.0/jspdf.plugin.autotable.min.js"></script>
-<style>
-  :root {
-    --primary: #0f172a;
-    --secondary: #1e293b;
-    --accent: #f97316;
-    --bg-main: #f1f5f9;
-    --card-bg: #ffffff;
-    --text-main: #334155;
-    --border-color: #e2e8f0;
-  }
-  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-main); color: var(--text-main); margin: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Control de tiempo laboral | Administración</title>
   
-  /* Login Premium */
-  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #334155 100%); }
-  .login-card { background: var(--card-bg); padding: 2.5rem; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.1); }
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
-  /* Sidebar Estilizada */
-  .sidebar { width: 270px; background: var(--primary); color: #fff; min-height: 100vh; position: fixed; left: 0; top: 0; padding: 1.25rem 0; z-index: 1000; transition: transform .3s ease; }
-  .sidebar .brand { padding: 0 1.5rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.75rem; color: #f8fafc; }
-  .sidebar .brand i { color: var(--accent); font-size: 1.4rem; }
-  .sidebar .nav { padding: 1rem 0.75rem; }
-  .sidebar .nav-link { color: #94a3b8; padding: 0.85rem 1rem; border-radius: 10px; display: flex; align-items: center; gap: 0.85rem; text-decoration: none; font-weight: 500; font-size: 0.92rem; transition: all 0.2s ease; margin-bottom: 0.25rem; }
-  .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(249, 115, 22, 0.12); color: #fff; }
-  .sidebar .nav-link.active i { color: var(--accent); }
-  
-  /* Main & Topbar */
-  .main-content { margin-left: 270px; padding: 2rem; min-height: 100vh; }
-  .topbar { background: var(--card-bg); padding: 1rem 1.75rem; border-radius: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
-  
-  /* Tarjetas Estadísticas Ejecutivas */
-  .stat-card { background: var(--card-bg); border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid var(--border-color); transition: transform 0.2s ease, box-shadow 0.2s ease; }
-  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-  .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-  .stat-val { font-size: 2rem; font-weight: 700; color: var(--primary); line-height: 1.2; margin-top: 0.5rem; }
-  .stat-lbl { color: #64748b; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-  /* Paneles y Tablas */
-  .content-panel { background: var(--card-bg); border-radius: 16px; padding: 1.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); border: 1px solid var(--border-color); margin-bottom: 2rem; }
-  .table thead th { background: #f8fafc; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; border-bottom: 2px solid var(--border-color); padding: 0.85rem 1rem; }
-  .table tbody td { padding: 1rem; vertical-align: middle; color: #1e293b; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); }
-  .table-hover tbody tr:hover { background-color: #f8fafc; }
-  
-  /* Badges y Elementos UI */
-  .badge-estado { padding: 0.4em 0.8em; border-radius: 30px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.3px; }
-  .badge-aprobado { background: #dcfce7; color: #166534; }
-  .badge-pendiente { background: #fef9c3; color: #854d0e; }
-  .badge-rechazado { background: #fee2e2; color: #991b1b; }
-  
-  .form-control, .form-select { border-radius: 10px; border-color: var(--border-color); padding: 0.65rem 0.9rem; font-size: 0.92rem; color: #334155; }
-  .form-control:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15); }
-  
-  .btn-primary { background: var(--primary); border: none; border-radius: 10px; padding: 0.65rem 1.25rem; font-weight: 600; }
-  .btn-primary:hover { background: #1e293b; }
-  .btn-accent { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 0.65rem 1.25rem; font-weight: 600; }
-  .btn-accent:hover { background: #ea580c; color: #fff; }
-
-  /* Loader */
-  .loader-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 1rem; color: #fff; }
-  .spinner { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 10000; }
-  .section { display: none; animation: fadeIn 0.25s ease-in-out; }
-  .section.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-  .funcionario-item { cursor: pointer; padding: 0.75rem 1rem; transition: background 0.15s; }
-  .funcionario-item:hover { background-color: #f1f5f9; }
-
-  @media (max-width: 768px) {
-    .sidebar { transform: translateX(-100%); }
-    .sidebar.show { transform: translateX(0); }
-    .main-content { margin-left: 0; padding: 1rem; }
-  }
-</style>
+  <style>
+    /* (MISMO CSS QUE ANTERIORMENTE, SIN CAMBIOS) */
+    :root { --color-primario: #173f66; --color-primario-oscuro: #102e4c; --color-primario-claro: #285b87; --color-dorado: #e2b84b; --color-dorado-claro: #e8c85c; --color-blanco: #ffffff; --color-gris-claro: #f3f6fa; --color-gris: #e9ecef; --color-texto: #1f2937; --color-exito: #198754; --color-peligro: #dc3545; --color-advertencia: #ffc107; --color-info: #0dcaf0; --sombra: 0 3px 14px rgba(16, 46, 76, .08); --sombra-hover: 0 4px 20px rgba(0,0,0,0.12); --radio: 14px; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--color-gris-claro); color: var(--color-texto); margin: 0; padding: 0; min-height: 100vh; font-size: 15px; line-height: 1.55; }
+    .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-primario-oscuro) 100%); padding: 20px; }
+    .login-card { background: white; border-radius: 16px; padding: clamp(24px, 5vw, 40px); width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .login-card .form-control, .login-card .btn { min-height: 48px; font-size: 16px; }
+    .login-logo { text-align: center; margin-bottom: 30px; }
+    .login-logo .icon { width: 80px; height: 80px; background: linear-gradient(135deg, var(--color-primario), var(--color-primario-claro)); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; color: var(--color-dorado); font-size: 40px; margin-bottom: 15px; box-shadow: 0 10px 30px rgba(26,58,108,0.3); }
+    .login-logo h2 { color: var(--color-primario); font-weight: 700; margin: 0; font-size: 22px; }
+    .login-logo p { color: #6c757d; margin: 5px 0 0 0; font-size: 14px; }
+    .app-container { display: none; min-height: 100vh; }
+    .app-container.active { display: flex; }
+    .sidebar { width: 260px; background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-primario-oscuro) 100%); color: white; min-height: 100vh; position: fixed; left: 0; top: 0; transition: all 0.3s; z-index: 1000; overflow-y: auto; }
+    .sidebar-header { padding: 22px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+    .sidebar-header .logo-icon { width: 50px; height: 50px; background: var(--color-dorado); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; color: var(--color-primario); font-size: 26px; margin-bottom: 10px; }
+    .sidebar-header h5 { margin: 0; font-size: 15px; font-weight: 600; }
+    .sidebar-header small { color: var(--color-dorado); font-size: 11px; }
+    .sidebar-menu { padding: 15px 0; }
+    .sidebar-menu .menu-item { padding: 13px 18px; color: rgba(255,255,255,0.8); cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; display: flex; align-items: center; gap: 12px; font-size: 15px; min-height: 48px; }
+    .sidebar-menu .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .sidebar-menu .menu-item.active { background: rgba(212,175,55,0.1); color: var(--color-dorado); border-left-color: var(--color-dorado); }
+    .sidebar-menu .menu-item i { font-size: 18px; width: 22px; }
+    .sidebar-menu .menu-divider { padding: 10px 20px 5px; color: rgba(255,255,255,0.4); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
+    .main-content { margin-left: 260px; flex: 1; min-height: 100vh; transition: all 0.3s; width: 100%; }
+    .topbar { background: white; padding: 12px clamp(14px, 2.2vw, 28px); box-shadow: var(--sombra); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; min-height: 72px; }
+    .topbar h4 { margin: 0; color: var(--color-primario); font-weight: 600; font-size: clamp(18px, 2vw, 23px); }
+    .topbar .user-info { display: flex; align-items: center; gap: 15px; }
+    .topbar .user-info .avatar { width: 40px; height: 40px; background: var(--color-primario); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    .content-area { padding: clamp(14px, 2.2vw, 28px); }
+    .section { display: none; }
+    .section.active { display: block; }
+    .stat-card, .panel { background: white; border-radius: var(--radio); box-shadow: var(--sombra); border: 1px solid #e4eaf1; }
+    .stat-card { padding: 20px; transition: all 0.3s; height: 100%; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--sombra-hover); }
+    .stat-card .icon-wrap { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 15px; }
+    .stat-card .label { color: #465568; font-size: 14px; margin-bottom: 5px; font-weight: 600; }
+    .stat-card .value { font-size: clamp(22px, 2.2vw, 29px); font-weight: 700; color: var(--color-primario); overflow-wrap: anywhere; }
+    .stat-card .sub { font-size: 13px; color: #6c757d; margin-top: 5px; }
+    .bg-primario-soft { background: rgba(26,58,108,0.1); color: var(--color-primario); }
+    .bg-dorado-soft { background: rgba(212,175,55,0.15); color: #a88820; }
+    .bg-exito-soft { background: rgba(25,135,84,0.1); color: var(--color-exito); }
+    .bg-info-soft { background: rgba(13,202,240,0.1); color: #0a8ea8; }
+    .bg-peligro-soft { background: rgba(220,53,69,0.1); color: var(--color-peligro); }
+    .panel { margin-bottom: 20px; }
+    .panel-header { padding: 18px 20px; border-bottom: 1px solid var(--color-gris); display: flex; justify-content: space-between; align-items: center; min-height: 62px; }
+    .panel-header h5 { margin: 0; color: var(--color-primario); font-weight: 600; font-size: 17px; line-height: 1.4; }
+    .panel-body { padding: 20px; }
+    .form-label { display: inline-block; font-weight: 650; color: var(--color-texto); font-size: 14px; margin-bottom: 8px; }
+    .form-control, .form-select { border-radius: 8px; border: 1px solid #b8c4d1; padding: 10px 13px; font-size: 15px; min-height: 44px; }
+    textarea.form-control { min-height: 92px; }
+    .form-control:focus, .form-select:focus, button:focus-visible, a:focus-visible, .menu-item:focus-visible { border-color: var(--color-primario); outline: 3px solid #e2b84b !important; outline-offset: 2px; box-shadow: 0 0 0 2px #173f66 !important; }
+    .btn, .btn-primario, .btn-dorado { min-height: 42px; font-size: 14px; font-weight: 650; }
+    .btn-primario { background: var(--color-primario); color: white; border: none; border-radius: 8px; padding: 10px 20px; transition: all 0.2s; }
+    .btn-primario:hover { background: var(--color-primario-oscuro); color: white; transform: translateY(-1px); }
+    .btn-dorado { background: var(--color-dorado); color: var(--color-primario-oscuro); border: none; border-radius: 8px; padding: 10px 20px; transition: all 0.2s; }
+    .btn-dorado:hover { background: var(--color-dorado-claro); color: var(--color-primario-oscuro); }
+    .table { font-size: 14px; margin-bottom: 0; }
+    .table thead th { background: var(--color-primario); color: white; font-weight: 500; font-size: 13px; padding: 12px; border: none; white-space: nowrap; }
+    .table tbody td { padding: 13px 12px; vertical-align: middle; border-color: var(--color-gris); }
+    .table tbody tr:hover { background: var(--color-gris-claro); }
+    .badge-estado { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .badge-activo { background: rgba(25,135,84,0.1); color: var(--color-exito); }
+    .badge-inactivo { background: rgba(220,53,69,0.1); color: var(--color-peligro); }
+    .badge-acumulacion { background: rgba(26,58,108,0.1); color: var(--color-primario); }
+    .badge-descuento { background: rgba(220,53,69,0.1); color: var(--color-peligro); }
+    .badge-reverso { background: rgba(255,193,7,0.15); color: #8a6d00; }
+    .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; }
+    .loader-overlay.active { display: flex; }
+    .spinner-custom { width: 50px; height: 50px; border: 4px solid var(--color-gris); border-top-color: var(--color-primario); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; width: min(420px, calc(100vw - 24px)); }
+    .toast { font-size: 14px; }
+    .saldo-display { background: linear-gradient(135deg, var(--color-primario), var(--color-primario-claro)); color: white; padding: 20px; border-radius: var(--radio); text-align: center; }
+    .saldo-display .valor { font-size: clamp(30px, 4vw, 40px); font-weight: 700; color: var(--color-dorado); }
+    .saldo-display .etiqueta { font-size: 13px; opacity: 0.9; }
+    .menu-toggle { display: none; background: none; border: none; font-size: 24px; color: var(--color-primario); cursor: pointer; }
+    @media (max-width: 992px) { .sidebar { transform: translateX(-100%); box-shadow: 10px 0 35px rgba(0,0,0,.18); } .sidebar.open { transform: translateX(0); } .main-content { margin-left: 0; } .menu-toggle { display: block; } .content-area { padding: 14px; } }
+    @media (max-width: 576px) { .topbar { align-items: flex-start; gap: 10px; } .topbar .user-info { gap: 8px; } .topbar .user-info > div { max-width: 115px; } .topbar h4 { font-size: 17px; } .panel-header { align-items: flex-start; flex-direction: column; gap: 12px; } .panel-body { padding: 15px; } .stat-card { padding: 15px; } .stat-card .icon-wrap { width: 42px; height: 42px; font-size: 20px; margin-bottom: 10px; } .stat-card .value { font-size: 22px; } .login-card { border-radius: 14px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+    .empty-state { text-align: center; padding: 34px 18px; color: #6c757d; }
+    .empty-state i { font-size: 60px; color: #dee2e6; margin-bottom: 15px; }
+    .chart-container { position: relative; height: 300px; }
+    .saldo-info-box { background: var(--color-gris-claro); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+    .saldo-info-box .row-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--color-gris); }
+    .saldo-info-box .row-item:last-child { border-bottom: none; }
+    .saldo-info-box .row-item.total { font-weight: 700; color: var(--color-primario); font-size: 16px; border-top: 2px solid var(--color-primario); margin-top: 8px; padding-top: 10px; }
+    .help-text, .form-text { color: #526174 !important; font-size: 13px; }
+  </style>
 </head>
 <body>
 
-<!-- VISTA LOGIN -->
-<div id="loginView" class="login-wrap">
+<!-- ==================== LOGIN ==================== -->
+<div id="loginScreen" class="login-container">
   <div class="login-card">
-    <div class="text-center mb-4">
-      <div style="width: 60px; height: 60px; background: rgba(249, 115, 22, 0.1); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
-        <i class="bi bi-shield-lock-fill text-accent" style="font-size: 1.75rem; color: var(--accent);"></i>
-      </div>
-      <h3 class="fw-bold text-dark mb-1">Panel Administrativo</h3>
-      <p class="text-muted small">Control de Tiempos Extras y Compensatorios</p>
+    <div class="login-logo">
+      <div class="icon"><i class="bi bi-clock-history"></i></div>
+      <h2>Control de tiempo laboral</h2>
+      <p>Registro de horas trabajadas y tiempo compensatorio</p>
     </div>
-    <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
+    <form id="formLogin" onsubmit="event.preventDefault(); ejecutarLogin();">
       <div class="mb-3">
-        <label class="form-label fw-semibold small text-muted">Usuario</label>
-        <input type="text" id="loginUser" class="form-control" required autocomplete="username">
+        <label class="form-label">Usuario</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+          <input type="text" class="form-control" id="loginUsuario" required autocomplete="username">
+        </div>
       </div>
       <div class="mb-4">
-        <label class="form-label fw-semibold small text-muted">Contraseña</label>
-        <input type="password" id="loginPass" class="form-control" required autocomplete="current-password">
+        <label class="form-label">Contraseña</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
+          <input type="password" class="form-control" id="loginClave" required autocomplete="current-password">
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary w-100 py-2.5 fw-semibold shadow-sm">Iniciar Sesión</button>
-      <div id="loginError" class="alert alert-danger mt-3 d-none small py-2"></div>
+      <button type="submit" class="btn btn-primario w-100" id="btnLogin">
+        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+      </button>
     </form>
   </div>
 </div>
 
-<!-- VISTA APLICACIÓN PRINCIPAL -->
-<div id="appView" class="d-none">
+<!-- ==================== APP ==================== -->
+<div id="appContainer" class="app-container">
   <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <i class="bi bi-stopwatch-fill"></i> <span>Gestión Tiempos</span>
+    <div class="sidebar-header">
+      <div class="logo-icon"><i class="bi bi-clock-history"></i></div>
+      <h5>Control de tiempo laboral</h5>
+      <small>Panel de administración</small>
     </div>
-    <nav class="nav flex-column">
-      <a class="nav-link active" data-section="dashboard" href="#"><i class="bi bi-grid-1x2-fill"></i> Panel Principal</a>
-      <a class="nav-link" data-section="funcionarios" href="#"><i class="bi bi-people-fill"></i> Funcionarios</a>
-      <a class="nav-link" data-section="registrar" href="#"><i class="bi bi-plus-circle-fill"></i> Registrar Tiempo</a>
-      <a class="nav-link" data-section="historial" href="#"><i class="bi bi-journal-richtext"></i> Historial General</a>
-      <a class="nav-link" data-section="aprobaciones" href="#"><i class="bi bi-check-circle-fill"></i> Aprobaciones</a>
-      <a class="nav-link" data-section="acumulados" href="#"><i class="bi bi-bar-chart-fill"></i> Control Acumulados</a>
-      <a class="nav-link" data-section="reportes" href="#"><i class="bi bi-file-earmark-pdf-fill"></i> Reportes PDF</a>
-      <a class="nav-link" data-section="configuracion" href="#"><i class="bi bi-gear-fill"></i> Configuración</a>
-      <a class="nav-link" data-section="bitacora" href="#"><i class="bi bi-shield-check"></i> Auditoría / Bitácora</a>
-      <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 px-2">
-        <a class="nav-link text-danger" href="#" onclick="doLogout()"><i class="bi bi-box-arrow-left"></i> Cerrar Sesión</a>
-      </div>
+    <nav class="sidebar-menu">
+      <div class="menu-divider">Inicio</div>
+      <div class="menu-item active" data-section="dashboard"><i class="bi bi-speedometer2"></i> Resumen general</div>
+      <div class="menu-divider">Gestión</div>
+      <div class="menu-item" data-section="funcionarios"><i class="bi bi-people"></i> Funcionarios</div>
+      <div class="menu-item" data-section="tiempoExtra"><i class="bi bi-plus-circle"></i> Registrar horas extra</div>
+      <div class="menu-item" data-section="compensatorio"><i class="bi bi-dash-circle"></i> Registrar compensatorio</div>
+      <div class="menu-divider">Seguimiento</div>
+      <div class="menu-item" data-section="consultas"><i class="bi bi-search"></i> Historial de movimientos</div>
+      <div class="menu-item" data-section="reportes"><i class="bi bi-file-earmark-text"></i> Informes y exportaciones</div>
+      <div class="menu-divider">Cuenta</div>
+      <div class="menu-item" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</div>
     </nav>
   </aside>
-
+  
   <main class="main-content">
     <div class="topbar">
       <div class="d-flex align-items-center gap-3">
-        <button class="btn btn-sm btn-light d-md-none border" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list fs-5"></i></button>
-        <h5 id="topTitle" class="fw-bold m-0 text-dark">Panel Principal</h5>
+        <button class="menu-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+        <h4 id="pageTitle">Resumen general</h4>
       </div>
-      <div class="d-flex align-items-center gap-3">
-        <div class="text-end d-none d-sm-block">
-          <div class="fw-bold small text-dark" id="adminName">Administrador</div>
-          <div class="text-muted" style="font-size: 0.72rem;">Sesión Activa</div>
+      <div class="user-info">
+        <div>
+          <div style="font-size:13px;font-weight:600;" id="userName">Administrador</div>
+          <div style="font-size:11px;color:#6c757d;" id="userRole">Administrador</div>
         </div>
-        <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px; font-weight: 600;">
-          A
-        </div>
+        <div class="avatar" id="userAvatar">A</div>
       </div>
     </div>
+    
+    <div class="content-area">
+      <!-- ============ DASHBOARD ============ -->
+      <section id="sec-dashboard" class="section active">
+        <div class="row g-3 mb-4">
+          <div class="col-md-3 col-sm-6"><div class="stat-card"><div class="icon-wrap bg-primario-soft"><i class="bi bi-people-fill"></i></div><div class="label">Funcionarios Activos</div><div class="value" id="dashTotalActivos">0</div></div></div>
+          <div class="col-md-3 col-sm-6"><div class="stat-card"><div class="icon-wrap bg-exito-soft"><i class="bi bi-plus-circle-fill"></i></div><div class="label">Horas extra acumuladas</div><div class="value" id="dashTotalAcumulado">00:00</div></div></div>
+          <div class="col-md-3 col-sm-6"><div class="stat-card"><div class="icon-wrap bg-peligro-soft"><i class="bi bi-dash-circle-fill"></i></div><div class="label">Tiempo compensado</div><div class="value" id="dashTotalCompensado">00:00</div></div></div>
+          <div class="col-md-3 col-sm-6"><div class="stat-card"><div class="icon-wrap bg-dorado-soft"><i class="bi bi-hourglass-split"></i></div><div class="label">Saldo disponible</div><div class="value" id="dashTotalPendiente">00:00</div></div></div>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-lg-8"><div class="panel"><div class="panel-header"><h5><i class="bi bi-bar-chart"></i> Horas Extras vs Compensatorio por Mes</h5></div><div class="panel-body"><div class="chart-container"><canvas id="chartMes"></canvas></div></div></div></div>
+          <div class="col-lg-4"><div class="panel"><div class="panel-header"><h5><i class="bi bi-pie-chart"></i> Acumulado vs Compensado</h5></div><div class="panel-body"><div class="chart-container"><canvas id="chartPie"></canvas></div></div></div></div>
+        </div>
+        <div class="row g-3">
+          <div class="col-lg-6"><div class="panel"><div class="panel-header"><h5><i class="bi bi-trophy"></i> Top 5 Funcionarios con Mayor Saldo</h5></div><div class="panel-body"><div class="chart-container"><canvas id="chartTop"></canvas></div></div></div></div>
+          <div class="col-lg-6"><div class="panel"><div class="panel-header"><h5><i class="bi bi-clock"></i> Últimos Registros</h5></div><div class="panel-body p-0"><div class="table-responsive"><table class="table"><thead><tr><th>Fecha</th><th>Funcionario</th><th>Tipo</th><th>Tiempo</th></tr></thead><tbody id="dashUltimos"><tr><td colspan="4" class="text-center text-muted py-4">Sin registros recientes</td></tr></tbody></table></div></div></div></div>
+        </div>
+      </section>
 
-    <!-- 1. DASHBOARD -->
-    <section id="dashboard" class="section active">
-      <div class="row g-3 mb-4">
-        <div class="col-md-6 col-xl-3">
-          <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-              <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-people"></i></div>
-              <span class="badge bg-success bg-opacity-10 text-success fw-semibold">Activos</span>
-            </div>
-            <div class="stat-val" id="stActivos">0</div>
-            <div class="stat-lbl mt-2">Funcionarios Registrados</div>
+      <!-- ============ FUNCIONARIOS ============ -->
+      <section id="sec-funcionarios" class="section">
+        <div class="panel">
+          <div class="panel-header"><h5><i class="bi bi-people"></i> Registro de funcionarios</h5><button class="btn btn-primario" onclick="abrirModalFuncionario()"><i class="bi bi-plus-lg"></i> Nuevo Funcionario</button></div>
+          <div class="panel-body">
+            <div class="row mb-3"><div class="col-md-6"><input type="text" class="form-control" id="buscarFuncionario" placeholder="🔍 Buscar por documento o nombre..." oninput="cargarFuncionarios()"></div></div>
+            <div class="table-responsive"><table class="table"><thead><tr><th>Documento</th><th>Nombre</th><th>Cargo</th><th>Dependencia</th><th>Saldo</th><th>Estado</th><th class="text-center">Acciones</th></tr></thead><tbody id="tbodyFuncionarios"></tbody></table></div>
           </div>
         </div>
-        <div class="col-md-6 col-xl-3">
-          <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-              <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-clock-history"></i></div>
-              <span class="badge bg-warning bg-opacity-10 text-warning fw-semibold">Bruto</span>
-            </div>
-            <div class="stat-val" id="stRegistradas">0h 0m</div>
-            <div class="stat-lbl mt-2">Horas Registradas</div>
-          </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-          <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-              <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-check2-all"></i></div>
-              <span class="badge bg-success bg-opacity-10 text-success fw-semibold">Neto</span>
-            </div>
-            <div class="stat-val" id="stAprobadas">0h 0m</div>
-            <div class="stat-lbl mt-2">Horas Aprobadas Netas</div>
-          </div>
-        </div>
-        <div class="col-md-6 col-xl-3">
-          <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-              <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-calendar-event"></i></div>
-              <span class="badge bg-info bg-opacity-10 text-info fw-semibold">Período</span>
-            </div>
-            <div class="stat-val" id="stDias">0</div>
-            <div class="stat-lbl mt-2">Días con Actividad</div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="row g-3">
-        <div class="col-lg-8">
-          <div class="content-panel h-100">
-            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tendencia Mensual de Horas Netas</h6>
-            <div style="height: 290px;"><canvas id="chartMes"></canvas></div>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="content-panel h-100">
-            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-pie-chart-fill me-2 text-warning"></i>Tipos de Jornada</h6>
-            <div style="height: 210px; position: relative;"><canvas id="chartTipo"></canvas></div>
-            <div class="mt-3" id="chartTipoLegend" style="font-size: 0.82rem;"></div>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- 2. FUNCIONARIOS -->
-    <section id="funcionarios" class="section">
-      <div class="content-panel">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h5 class="fw-bold m-0 text-dark">Directorio de Funcionarios</h5>
-          <button class="btn btn-primary" onclick="openFuncionarioModal()"><i class="bi bi-plus-lg me-1"></i> Nuevo Funcionario</button>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead><tr><th>Identificación</th><th>Nombre Completo</th><th>Cargo</th><th>Dependencia</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
-            <tbody id="tblFuncionarios"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. REGISTRAR TIEMPO / RESTA -->
-    <section id="registrar" class="section">
-      <div class="content-panel">
-        <h5 class="fw-bold mb-3 text-dark">Registrar Jornada (Suma o Resta / Compensatorio)</h5>
-        <p class="text-muted small mb-4">Seleccione el funcionario, defina el tipo de afectación e ingrese los rangos horarios.</p>
-        <form id="formRegistro" onsubmit="event.preventDefault(); guardarRegistro();">
-          <div class="row g-3">
-            <div class="col-md-6 position-relative">
-              <label class="form-label fw-semibold small">Funcionario Activo *</label>
-              <input type="text" id="regFuncionarioSearch" class="form-control" placeholder="Buscar por nombre o cédula..." autocomplete="off" oninput="buscarFuncionario(this.value)">
-              <input type="hidden" id="regFuncionario">
-              <div id="funcionarioResults" class="list-group position-absolute w-100 shadow-lg border rounded-3 mt-1" style="z-index: 1050; max-height: 220px; overflow-y: auto; display: none; background: #fff;"></div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label fw-semibold small">Tipo de Afectación *</label>
-              <select id="regTipo" class="form-select" required onchange="evaluarTipoJornada(this.value)">
-                <option value="Diurna">Diurna (Suma +)</option>
-                <option value="Nocturna">Nocturna (Suma +)</option>
-                <option value="Dominical">Dominical (Suma +)</option>
-                <option value="Festiva">Festiva (Suma +)</option>
-                <option value="Compensatorio (Resta)">Compensatorio (Resta -)</option>
-                <option value="Descuento (Resta)">Descuento (Resta -)</option>
-                <option value="Otra">Otra</option>
-              </select>
-            </div>
-
-            <div class="col-md-12">
-              <div class="form-check form-switch p-3 border rounded-3 bg-light">
-                <input class="form-check-input ms-0 me-2" type="checkbox" id="regEsResta" onchange="calcDuracion()">
-                <label class="form-check-label fw-bold text-danger small" for="regEsResta">
-                  <i class="bi bi-dash-circle-fill me-1"></i> RESTAR ESTE TIEMPO DEL ACUMULADO GLOBAL (COMPENSATORIO / PERMISO)
-                </label>
+      <!-- ============ TIEMPO EXTRA ============ -->
+      <section id="sec-tiempoExtra" class="section">
+        <div class="row g-3">
+          <div class="col-lg-5">
+            <div class="panel">
+              <div class="panel-header"><h5><i class="bi bi-plus-circle"></i> Registrar horas extra</h5></div>
+              <div class="panel-body">
+                <form id="formTiempoExtra" onsubmit="event.preventDefault(); guardarTiempoExtra();">
+                  <div class="mb-3 position-relative">
+                    <label class="form-label">Funcionario *</label>
+                    <input type="text" class="form-control" id="teBuscarFunc" placeholder="Escriba nombre o documento..." autocomplete="off">
+                    <div id="teListaFuncionarios" class="list-group mt-1" style="max-height:200px;overflow-y:auto;display:none;position:absolute;z-index:10;width:calc(100% - 24px);background:white;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+                    <input type="hidden" id="teIdFuncionario">
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Documento</label><input type="text" class="form-control" id="teDocumento" readonly></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Fecha Laborada *</label><input type="date" class="form-control" id="teFecha" required></div>
+                  </div>
+                  <div class="mb-3"><label class="form-label">Tipo de Tiempo *</label><select class="form-select" id="teTipo" required><option value="">Seleccione...</option><option value="DIURNO">Diurno</option><option value="NOCTURNO">Nocturno</option><option value="DOMINICAL">Dominical</option><option value="FESTIVO">Festivo</option></select></div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Hora Inicio *</label><input type="time" class="form-control" id="teHoraInicio" required onchange="calcularTotalTE()"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Hora Fin *</label><input type="time" class="form-control" id="teHoraFin" required onchange="calcularTotalTE()"></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Total Horas</label><input type="text" class="form-control" id="teTotalHoras" readonly></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Total Minutos</label><input type="text" class="form-control" id="teTotalMinutos" readonly></div>
+                  </div>
+                  <div class="mb-3"><label class="form-label">Observaciones</label><textarea class="form-control" id="teObservaciones" rows="2"></textarea></div>
+                  <button type="submit" class="btn btn-primario w-100"><i class="bi bi-save"></i> Guardar Registro</button>
+                </form>
               </div>
             </div>
-
-            <div class="col-md-3"><label class="form-label fw-semibold small">Fecha Inicio *</label><input type="date" id="regFechaIni" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label fw-semibold small">Hora Inicio *</label><input type="time" id="regHoraIni" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label fw-semibold small">Fecha Fin *</label><input type="date" id="regFechaFin" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label fw-semibold small">Hora Fin *</label><input type="time" id="regHoraFin" class="form-control" required></div>
-            
-            <div class="col-md-4"><label class="form-label fw-semibold small">Descanso (Minutos)</label><input type="number" id="regDescanso" class="form-control" value="0" min="0"></div>
-            <div class="col-md-8"><label class="form-label fw-semibold small">Duración Calculada</label><input type="text" id="regDuracion" class="form-control bg-light fw-bold text-primary" readonly placeholder="Calculando automáticamente..."></div>
-
-            <div class="col-md-12"><label class="form-label fw-semibold small">Motivo / Justificación *</label><input type="text" id="regMotivo" class="form-control" placeholder="Ej: Labores urgentes de soporte técnico / Disfrute de compensatorio" required></div>
-            <div class="col-md-12"><label class="form-label fw-semibold small">Actividad Detallada / Soporte *</label><textarea id="regActividad" class="form-control" rows="2" required></textarea></div>
-            <div class="col-md-12"><label class="form-label fw-semibold small">Observaciones Adicionales</label><textarea id="regObs" class="form-control" rows="2"></textarea></div>
           </div>
-          <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn btn-accent px-4"><i class="bi bi-check-lg me-1"></i> Guardar Registro</button>
-            <button type="reset" class="btn btn-light border px-4" onclick="setTimeout(calcDuracion, 100)">Limpiar Formulario</button>
+          <div class="col-lg-7">
+            <div class="panel">
+              <div class="panel-header"><h5><i class="bi bi-list-ul"></i> Registros de Tiempo Extra</h5></div>
+              <div class="panel-body">
+                <div class="row mb-3 g-2">
+                  <div class="col-md-4"><select class="form-select" id="filtroTEFunc" onchange="cargarTiempoExtra()"><option value="">Todos los funcionarios</option></select></div>
+                  <div class="col-md-4"><input type="date" class="form-control" id="filtroTEFechaIni" onchange="cargarTiempoExtra()"></div>
+                  <div class="col-md-4"><input type="date" class="form-control" id="filtroTEFechaFin" onchange="cargarTiempoExtra()"></div>
+                </div>
+                <div class="table-responsive"><table class="table"><thead><tr><th>Fecha</th><th>Funcionario</th><th>Tipo</th><th>Horario</th><th>Total</th><th class="text-center">Acción</th></tr></thead><tbody id="tbodyTiempoExtra"></tbody></table></div>
+              </div>
+            </div>
           </div>
-        </form>
-      </div>
-    </section>
-
-    <!-- 4. HISTORIAL -->
-    <section id="historial" class="section">
-      <div class="content-panel">
-        <h5 class="fw-bold mb-3 text-dark">Historial General de Registros</h5>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead><tr><th>Cons.</th><th>Funcionario</th><th>Dependencia</th><th>Fecha Inicio</th><th>Duración</th><th>Tipo</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
-            <tbody id="tblHistorial"></tbody>
-          </table>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- 5. APROBACIONES -->
-    <section id="aprobaciones" class="section">
-      <div class="content-panel">
-        <h5 class="fw-bold mb-3 text-dark">Bandeja de Aprobaciones Pendientes</h5>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead><tr><th>Cons.</th><th>Funcionario</th><th>Intervalo Horario</th><th>Duración</th><th>Motivo</th><th class="text-end">Acción Ejecutiva</th></tr></thead>
-            <tbody id="tblAprobaciones"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. ACUMULADOS -->
-    <section id="acumulados" class="section">
-      <div class="content-panel">
-        <h5 class="fw-bold mb-3 text-dark">Control Consolidado de Acumulados Netos</h5>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead><tr><th>Funcionario</th><th>Registros</th><th>Días con Actividad</th><th>Minutos Netos</th><th>Balance Horas Netas</th><th>Equivalencia Días</th></tr></thead>
-            <tbody id="tblAcumulados"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. REPORTES -->
-    <section id="reportes" class="section">
-      <div class="content-panel">
-        <h5 class="fw-bold mb-3 text-dark">Generador de Reportes Institucionales en PDF</h5>
-        <div class="row g-3 mb-4">
-          <div class="col-md-3"><label class="form-label fw-semibold small">Funcionario</label><select id="repFuncionario" class="form-select"><option value="">Todos</option></select></div>
-          <div class="col-md-3"><label class="form-label fw-semibold small">Estado</label><select id="repEstado" class="form-select"><option value="">Todos</option><option value="aprobado">Aprobados</option><option value="pendiente">Pendientes</option><option value="rechazado">Rechazados</option></select></div>
-          <div class="col-md-3"><label class="form-label fw-semibold small">Fecha Desde</label><input type="date" id="repDesde" class="form-control"></div>
-          <div class="col-md-3"><label class="form-label fw-semibold small">Fecha Hasta</label><input type="date" id="repHasta" class="form-control"></div>
-        </div>
-        <button class="btn btn-danger px-4" onclick="exportarPDF()"><i class="bi bi-file-earmark-pdf-fill me-1"></i> Descargar Reporte PDF</button>
-      </div>
-    </section>
-
-    <!-- 8. CONFIGURACIÓN -->
-    <section id="configuracion" class="section">
-      <div class="content-panel">
-        <h5 class="fw-bold mb-3 text-dark">Parámetros Generales del Sistema</h5>
-        <form id="formConfig" onsubmit="event.preventDefault(); guardarConfig();">
-          <div class="row g-3">
-            <div class="col-md-8"><label class="form-label fw-semibold small">Nombre de la Institución</label><input type="text" id="cfgNombre" class="form-control" required></div>
-            <div class="col-md-4"><label class="form-label fw-semibold small">Jornada Diaria Estándar (Minutos)</label><input type="number" id="cfgJornada" class="form-control" required><small class="text-muted">Ej: 480 min = 8 horas</small></div>
+      <!-- ============ COMPENSATORIO ============ -->
+      <section id="sec-compensatorio" class="section">
+        <div class="row g-3">
+          <div class="col-lg-5">
+            <div class="panel">
+              <div class="panel-header"><h5><i class="bi bi-dash-circle"></i> Registrar Tiempo Compensatorio</h5></div>
+              <div class="panel-body">
+                <form id="formCompensatorio" onsubmit="event.preventDefault(); guardarCompensatorio();">
+                  <div class="mb-3 position-relative">
+                    <label class="form-label">Funcionario *</label>
+                    <input type="text" class="form-control" id="tcBuscarFunc" placeholder="Escriba nombre o documento..." autocomplete="off">
+                    <div id="tcListaFuncionarios" class="list-group mt-1" style="max-height:200px;overflow-y:auto;display:none;position:absolute;z-index:10;width:calc(100% - 24px);background:white;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+                    <input type="hidden" id="tcIdFuncionario">
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Documento</label><input type="text" class="form-control" id="tcDocumento" readonly></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Fecha *</label><input type="date" class="form-control" id="tcFecha" required></div>
+                  </div>
+                  <div class="saldo-info-box"><div class="row-item"><span>Saldo disponible:</span><strong id="tcSaldoDisponible" style="color:var(--color-primario);">00:00</strong></div></div>
+                  <div class="row">
+                    <div class="col-md-4 mb-3"><label class="form-label">Horas *</label><input type="number" class="form-control" id="tcHoras" min="0" value="0" onchange="calcularTotalTC()" oninput="calcularTotalTC()"></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Minutos *</label><input type="number" class="form-control" id="tcMinutos" min="0" max="59" value="0" onchange="calcularTotalTC()" oninput="calcularTotalTC()"></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Total</label><input type="text" class="form-control" id="tcTotal" readonly></div>
+                  </div>
+                  <div class="mb-3"><label class="form-label">Motivo *</label><input type="text" class="form-control" id="tcMotivo" required></div>
+                  <div class="mb-3"><label class="form-label">Observaciones</label><textarea class="form-control" id="tcObservaciones" rows="2"></textarea></div>
+                  <button type="submit" class="btn btn-primario w-100"><i class="bi bi-save"></i> Registrar Descuento</button>
+                </form>
+              </div>
+            </div>
           </div>
-          <div class="mt-4"><button type="submit" class="btn btn-primary px-4">Guardar Cambios</button></div>
-        </form>
-      </div>
-    </section>
-
-    <!-- 9. BITÁCORA -->
-    <section id="bitacora" class="section">
-      <div class="content-panel">
-        <h5 class="fw-bold mb-3 text-dark">Registro de Auditoría y Trazabilidad</h5>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead><tr><th>Fecha / Hora</th><th>Administrador</th><th>Acción Registrada</th><th>ID Referencia</th><th>Motivo / Detalles</th></tr></thead>
-            <tbody id="tblBitacora"></tbody>
-          </table>
+          <div class="col-lg-7">
+            <div class="panel">
+              <div class="panel-header"><h5><i class="bi bi-list-ul"></i> Registros Compensatorios</h5></div>
+              <div class="panel-body">
+                <div class="row mb-3 g-2">
+                  <div class="col-md-4"><select class="form-select" id="filtroTCFunc" onchange="cargarCompensatorio()"><option value="">Todos los funcionarios</option></select></div>
+                  <div class="col-md-4"><input type="date" class="form-control" id="filtroTCFechaIni" onchange="cargarCompensatorio()"></div>
+                  <div class="col-md-4"><input type="date" class="form-control" id="filtroTCFechaFin" onchange="cargarCompensatorio()"></div>
+                </div>
+                <div class="table-responsive"><table class="table"><thead><tr><th>Fecha</th><th>Funcionario</th><th>Total</th><th>Motivo</th><th class="text-center">Acción</th></tr></thead><tbody id="tbodyCompensatorio"></tbody></table></div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- ============ CONSULTAS ============ -->
+      <section id="sec-consultas" class="section">
+        <div class="panel">
+          <div class="panel-header"><h5><i class="bi bi-search"></i> Historial de movimientos y Filtros</h5></div>
+          <div class="panel-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-3"><label class="form-label">Funcionario</label><select class="form-select" id="filtroMovFunc"><option value="">Todos</option></select></div>
+              <div class="col-md-2"><label class="form-label">Fecha Inicio</label><input type="date" class="form-control" id="filtroMovFechaIni"></div>
+              <div class="col-md-2"><label class="form-label">Fecha Fin</label><input type="date" class="form-control" id="filtroMovFechaFin"></div>
+              <div class="col-md-2"><label class="form-label">Tipo</label><select class="form-select" id="filtroMovTipo"><option value="">Todos</option><option value="ACUMULACIÓN">Acumulación</option><option value="DESCUENTO">Descuento</option><option value="REVERSO_ACUMULACIÓN">Reverso Acum.</option><option value="REVERSO_DESCUENTO">Reverso Desc.</option></select></div>
+              <div class="col-md-3 d-flex align-items-end"><button class="btn btn-primario w-100" onclick="cargarMovimientos()"><i class="bi bi-search"></i> Consultar</button></div>
+            </div>
+            <div class="table-responsive"><table class="table"><thead><tr><th>Fecha</th><th>Funcionario</th><th>Tipo</th><th>Descripción</th><th>Minutos</th><th>Saldo Ant.</th><th>Saldo Nuevo</th></tr></thead><tbody id="tbodyMovimientos"></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ REPORTES ============ -->
+      <section id="sec-reportes" class="section">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="panel">
+              <div class="panel-header"><h5><i class="bi bi-person-badge"></i> Reporte Individual</h5></div>
+              <div class="panel-body">
+                <div class="mb-3"><label class="form-label">Funcionario</label><select class="form-select" id="repFuncionario"><option value="">Seleccione...</option></select></div>
+                <div class="row g-2 mb-3"><div class="col-6"><label class="form-label">Desde</label><input type="date" class="form-control" id="repFechaIni"></div><div class="col-6"><label class="form-label">Hasta</label><input type="date" class="form-control" id="repFechaFin"></div></div>
+                <div class="d-grid gap-2">
+                  <button class="btn btn-primario" onclick="verReporteIndividual()"><i class="bi bi-eye"></i> Ver Reporte</button>
+                  <button class="btn btn-dorado" onclick="exportarReporteIndividual('csv')"><i class="bi bi-file-earmark-excel"></i> Exportar a Excel</button>
+                  <button class="btn btn-dorado" onclick="exportarReporteIndividual('pdf')"><i class="bi bi-file-earmark-pdf"></i> Exportar a PDF</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="panel">
+              <div class="panel-header"><h5><i class="bi bi-file-earmark-text"></i> Reporte General</h5></div>
+              <div class="panel-body">
+                <p class="text-muted small">Genera un reporte con el estado actual de todos los funcionarios.</p>
+                <div class="row g-2 mb-3"><div class="col-6"><label class="form-label">Desde</label><input type="date" class="form-control" id="repGenFechaIni"></div><div class="col-6"><label class="form-label">Hasta</label><input type="date" class="form-control" id="repGenFechaFin"></div></div>
+                <div class="d-grid gap-2">
+                  <button class="btn btn-primario" onclick="verReporteGeneral()"><i class="bi bi-eye"></i> Ver Reporte General</button>
+                  <button class="btn btn-dorado" onclick="exportarGeneral('csv')"><i class="bi bi-file-earmark-excel"></i> Exportar a Excel</button>
+                  <button class="btn btn-dorado" onclick="exportarGeneral('pdf')"><i class="bi bi-file-earmark-pdf"></i> Exportar a PDF</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel mt-3" id="panelResultadoReporte" style="display:none;">
+          <div class="panel-header"><h5 id="tituloReporte">Resultado del Reporte</h5></div>
+          <div class="panel-body" id="contenidoReporte"></div>
+        </div>
+      </section>
+    </div>
   </main>
 </div>
 
-<!-- MODAL FUNCIONARIO -->
+<!-- ==================== MODALES ==================== -->
 <div class="modal fade" id="modalFuncionario" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg rounded-4">
-      <form id="formFuncionario" onsubmit="event.preventDefault(); guardarFuncionario();">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold text-dark">Gestión de Funcionario</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="funcId">
-          <div class="row g-3">
-            <div class="col-md-6"><label class="form-label small fw-semibold">Identificación *</label><input type="text" id="funcIdentificacion" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label small fw-semibold">Nombre Completo *</label><input type="text" id="funcNombres" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label small fw-semibold">Cargo</label><input type="text" id="funcCargo" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label small fw-semibold">Dependencia</label><input type="text" id="funcDependencia" class="form-control"></div>
-            <div class="col-md-12"><label class="form-label small fw-semibold">Correo Electrónico</label><input type="email" id="funcCorreo" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label small fw-semibold">Estado</label><select id="funcEstado" class="form-select"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></div>
-            <div class="col-md-12"><label class="form-label small fw-semibold">Observaciones</label><textarea id="funcObs" class="form-control" rows="2"></textarea></div>
-          </div>
-        </div>
-        <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Datos</button>
-        </div>
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header" style="background:var(--color-primario);color:white;"><h5 class="modal-title" id="tituloModalFunc">Nuevo Funcionario</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <form id="formFuncionario">
+        <input type="hidden" id="funcId">
+        <div class="mb-3"><label class="form-label">Documento *</label><input type="text" class="form-control" id="funcDocumento" required></div>
+        <div class="mb-3"><label class="form-label">Nombre Completo *</label><input type="text" class="form-control" id="funcNombre" required></div>
+        <div class="mb-3"><label class="form-label">Cargo</label><input type="text" class="form-control" id="funcCargo"></div>
+        <div class="mb-3"><label class="form-label">Dependencia</label><input type="text" class="form-control" id="funcDependencia"></div>
+        <div class="mb-3"><label class="form-label">Estado</label><select class="form-select" id="funcEstado"><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option></select></div>
       </form>
     </div>
-  </div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primario" onclick="guardarFuncionario()"><i class="bi bi-save"></i> Guardar</button></div>
+  </div></div>
 </div>
 
-<!-- LOADER & TOASTS -->
-<div class="loader-overlay" id="loader"><div class="spinner"></div><div class="fw-semibold">Procesando solicitud...</div></div>
-<div class="toast-container" id="toasts"></div>
+<div class="modal fade" id="modalHistorial" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header" style="background:var(--color-primario);color:white;"><h5 class="modal-title">Historial del Funcionario</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="contenidoHistorial"></div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalReverso" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header" style="background:var(--color-advertencia);"><h5 class="modal-title">Reversar Registro</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Esta acción creará un movimiento de reverso en el historial.</div>
+      <input type="hidden" id="revId"><input type="hidden" id="revTipo">
+      <div class="mb-3"><label class="form-label">Motivo de la reversión *</label><textarea class="form-control" id="revMotivo" rows="3" required></textarea></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-dorado" onclick="ejecutarReverso()"><i class="bi bi-arrow-counterclockwise"></i> Confirmar Reversión</button></div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalConfirm" tabindex="-1">
+  <div class="modal-dialog modal-sm"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Confirmación</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="confirmMensaje"></div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-danger" id="btnConfirmOk">Confirmar</button></div>
+  </div></div>
+</div>
+
+<div class="loader-overlay" id="loader"><div class="text-center"><div class="spinner-custom"></div><p class="mt-3 text-muted">Procesando...</p></div></div>
+<div class="toast-container" id="toastContainer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-const APP = { token: null, user: null, chartMes: null, chartTipo: null };
-let funcionariosCache = [];
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAVgBiHLLUbB5f-ODppYpl8JexPp5lgEC4AfLEu4VvwTZi9UWyRfK-xftNcakvGDlr/exec';
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-function showLoader(show) { document.getElementById('loader').classList.toggle('active', show); }
-function toast(msg, type='success') {
-  const c = document.getElementById('toasts');
-  const colors = { success:'bg-success', error:'bg-danger', warning:'bg-warning', info:'bg-info' };
-  const el = document.createElement('div');
-  el.className = `toast align-items-center text-white ${colors[type]} border-0 show shadow`;
-  el.style.borderRadius = '10px';
-  el.innerHTML = `<div class="d-flex"><div class="toast-body fw-semibold">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
-  c.appendChild(el);
-  setTimeout(() => el.remove(), 4000);
+<script>
+// ============================================================
+// CONFIGURACIÓN DE CONEXIÓN CON GOOGLE APPS SCRIPT
+// ============================================================
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwLLZX5mMVWOTHhhewXr2ZHkKiuiFFUogMcWxlN-uQTkoYNXKyxFikCxoEh3IIGdaBSIw/exec";
+
+// Función reemplazo de google.script.run para funcionar desde GitHub Pages
+async function callServer(funcion, ...args) {
+  mostrarLoader();
+  try {
+    // Usamos text/plain para evitar la preflight OPTIONS request que GAS no maneja bien por defecto
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ funcion: funcion, argumentos: args })
+    });
+    
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    
+    const resultado = await response.json();
+    return resultado;
+  } catch (error) {
+    console.error("Error en callServer:", error);
+    throw new Error("Error de conexión con el servidor. Verifica la consola.");
+  } finally {
+    ocultarLoader();
+  }
 }
 
-function call(fn, ...args) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ fn, args }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
-      const json = await res.json();
-      if (json.success !== false) resolve(json.data !== undefined ? json.data : json);
-      else throw new Error(json.message || 'Error en el servidor');
-    } catch (err) { toast(err.message || 'Error de conexión', 'error'); reject(err); }
+// ============================================================
+// VARIABLES GLOBALES Y UTILIDADES
+// ============================================================
+let usuarioActual = null;
+let chartMes = null, chartPie = null, chartTop = null;
+
+function mostrarLoader() { document.getElementById('loader').classList.add('active'); }
+function ocultarLoader() { document.getElementById('loader').classList.remove('active'); }
+
+function mostrarToast(mensaje, tipo = 'success') {
+  const colores = { success: '#198754', danger: '#dc3545', warning: '#ffc107', info: '#0dcaf0' };
+  const iconos = { success: 'bi-check-circle-fill', danger: 'bi-x-circle-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' };
+  const id = 'toast-' + Date.now();
+  const html = `<div id="${id}" class="toast align-items-center text-white border-0 show" style="background:${colores[tipo]};" role="alert">
+    <div class="d-flex"><div class="toast-body"><i class="bi ${iconos[tipo]}"></i> ${mensaje}</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`;
+  document.getElementById('toastContainer').insertAdjacentHTML('beforeend', html);
+  setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 4000);
+}
+
+function confirmar(mensaje, callback) {
+  document.getElementById('confirmMensaje').innerHTML = mensaje;
+  const modal = new bootstrap.Modal(document.getElementById('modalConfirm'));
+  const btn = document.getElementById('btnConfirmOk');
+  btn.onclick = () => { modal.hide(); callback(); };
+  modal.show();
+}
+
+function minutosAHorasMinutos(minutos) {
+  minutos = parseInt(minutos) || 0;
+  const signo = minutos < 0 ? '-' : '';
+  minutos = Math.abs(minutos);
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  return `${signo}${('0' + h).slice(-2)}:${('0' + m).slice(-2)}`;
+}
+
+// ============================================================
+// LOGIN Y NAVEGACIÓN
+// ============================================================
+async function ejecutarLogin() {
+  const usuario = document.getElementById('loginUsuario').value.trim();
+  const clave = document.getElementById('loginClave').value.trim();
+  if (!usuario || !clave) { mostrarToast('Complete todos los campos', 'warning'); return; }
+  
+  try {
+    const r = await callServer('login', usuario, clave);
+    if (r.ok) {
+      usuarioActual = { usuario: r.usuario, nombre: r.nombre };
+      document.getElementById('userName').textContent = r.nombre;
+      document.getElementById('userAvatar').textContent = r.nombre.charAt(0).toUpperCase();
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appContainer').classList.add('active');
+      await inicializarApp();
+      mostrarToast(r.mensaje, 'success');
+    } else {
+      mostrarToast(r.mensaje, 'danger');
+    }
+  } catch (e) {
+    mostrarToast('Error: ' + e.message, 'danger');
+  }
+}
+
+function cerrarSesion() {
+  confirmar('¿Desea cerrar la sesión?', () => {
+    usuarioActual = null;
+    document.getElementById('appContainer').classList.remove('active');
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginUsuario').value = '';
+    document.getElementById('loginClave').value = '';
   });
 }
 
-function fmtDuracion(min) {
-  min = parseInt(min) || 0;
-  const neg = min < 0, abs = Math.abs(min);
-  return `${neg ? '-' : ''}${Math.floor(abs/60)}h ${abs%60}m`;
-}
-
-function badgeEstado(e) {
-  const cls = { aprobado:'badge-aprobado', rechazado:'badge-rechazado', pendiente:'badge-pendiente' };
-  return `<span class="badge-estado ${cls[e]||'badge-pendiente'}">${(e||'pendiente').toUpperCase()}</span>`;
-}
-
-document.querySelectorAll('.sidebar .nav-link[data-section]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const sec = a.dataset.section;
+document.querySelectorAll('.menu-item[data-section]').forEach(item => {
+  item.addEventListener('click', () => {
+    const sec = item.dataset.section;
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    item.classList.add('active');
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById(sec).classList.add('active');
-    document.querySelectorAll('.sidebar .nav-link').forEach(n => n.classList.remove('active'));
-    a.classList.add('active');
-    document.getElementById('topTitle').textContent = a.textContent.trim();
-    loadSection(sec);
-    if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('show');
+    document.getElementById('sec-' + sec).classList.add('active');
+    document.getElementById('pageTitle').textContent = item.textContent.trim();
+    if (window.innerWidth <= 992) document.getElementById('sidebar').classList.remove('open');
+    cargarSeccion(sec);
   });
 });
 
-function loadSection(sec) {
-  if (sec === 'dashboard') loadDashboard();
-  else if (sec === 'funcionarios') loadFuncionarios();
-  else if (sec === 'registrar') loadFormRegistro();
-  else if (sec === 'historial') loadHistorial();
-  else if (sec === 'aprobaciones') loadAprobaciones();
-  else if (sec === 'acumulados') loadAcumulados();
-  else if (sec === 'reportes') loadReportes();
-  else if (sec === 'configuracion') loadConfig();
-  else if (sec === 'bitacora') loadBitacora();
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+async function cargarSeccion(sec) {
+  if (sec === 'dashboard') await cargarDashboard();
+  else if (sec === 'funcionarios') await cargarFuncionarios();
+  else if (sec === 'tiempoExtra') { await cargarSelectoresFunc(); await cargarTiempoExtra(); }
+  else if (sec === 'compensatorio') { await cargarSelectoresFunc(); await cargarCompensatorio(); }
+  else if (sec === 'consultas') { await cargarSelectoresFunc('filtroMovFunc'); await cargarMovimientos(); }
+  else if (sec === 'reportes') { await cargarSelectoresFunc('repFuncionario'); }
 }
 
-async function doLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  const err = document.getElementById('loginError');
-  err.classList.add('d-none');
-  showLoader(true);
+async function inicializarApp() { await cargarDashboard(); }
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function cargarDashboard() {
   try {
-    const r = await call('loginAdmin', u, p);
-    if (r.success) {
-      APP.token = r.token; APP.user = r.user;
-      document.getElementById('loginView').classList.add('d-none');
-      document.getElementById('appView').classList.remove('d-none');
-      document.getElementById('adminName').textContent = r.user;
-      loadDashboard();
-    } else { err.textContent = r.message; err.classList.remove('d-none'); }
-  } catch(e) { err.textContent = 'Error de conexión'; err.classList.remove('d-none'); }
-  finally { showLoader(false); }
+    const r = await callServer('obtenerDashboard');
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    const d = r.data;
+    document.getElementById('dashTotalActivos').textContent = d.totalActivos;
+    document.getElementById('dashTotalAcumulado').textContent = d.totalAcumuladoFormato;
+    document.getElementById('dashTotalCompensado').textContent = d.totalCompensadoFormato;
+    document.getElementById('dashTotalPendiente').textContent = d.totalPendienteFormato;
+    
+    const tbody = document.getElementById('dashUltimos');
+    if (!d.ultimosRegistros || d.ultimosRegistros.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Sin registros recientes</td></tr>';
+    } else {
+      tbody.innerHTML = d.ultimosRegistros.map(x => `
+        <tr><td>${x.fecha}</td><td>${x.nombre}</td>
+        <td><span class="badge-estado badge-${x.tipo.toLowerCase().replace('_','-').substring(0,10)}">${x.tipo}</span></td>
+        <td><strong>${x.formato}</strong></td></tr>`).join('');
+    }
+    renderizarGraficos(d);
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
-async function doLogout() {
-  if (!confirm('¿Cerrar sesión?')) return;
-  try { await call('cerrarSesion', APP.token); } catch(e){}
-  APP.token = null; APP.user = null;
-  document.getElementById('appView').classList.add('d-none');
-  document.getElementById('loginView').classList.remove('d-none');
-  document.getElementById('loginPass').value = '';
-}
-
-async function loadDashboard() {
-  showLoader(true);
-  try {
-    const d = await call('obtenerEstadisticasDashboard', APP.token);
-    document.getElementById('stActivos').textContent = d.funcionariosActivos;
-    document.getElementById('stRegistradas').textContent = d.horasRegistradas;
-    document.getElementById('stAprobadas').textContent = d.horasAprobadas;
-    document.getElementById('stDias').textContent = d.diasCalendario;
-    renderChartMes(d.graficoMeses);
-    renderChartTipo(d.distribucionTipo);
-  } finally { showLoader(false); }
-}
-
-function renderChartMes(data) {
-  const ctx = document.getElementById('chartMes').getContext('2d');
-  if (APP.chartMes) APP.chartMes.destroy();
-  const grad = ctx.createLinearGradient(0,0,0,300);
-  grad.addColorStop(0, 'rgba(15, 23, 42, 0.85)'); grad.addColorStop(1, 'rgba(15, 23, 42, 0.1)');
-  APP.chartMes = new Chart(ctx, {
+function renderizarGraficos(d) {
+  const meses = Object.keys({...(d.porMesAcumulado||{}), ...(d.porMesCompensado||{})}).sort();
+  const dataAcum = meses.map(m => ((d.porMesAcumulado?.[m] || 0) / 60).toFixed(2));
+  const dataComp = meses.map(m => ((d.porMesCompensado?.[m] || 0) / 60).toFixed(2));
+  
+  if (chartMes) chartMes.destroy();
+  chartMes = new Chart(document.getElementById('chartMes'), {
     type: 'bar',
-    data: { labels: data.labels, datasets: [{ label: 'Horas Netas', data: data.data, backgroundColor: grad, borderRadius: 6 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+    data: { labels: meses, datasets: [
+      { label: 'Horas Extras', data: dataAcum, backgroundColor: '#173f66' },
+      { label: 'Compensatorio', data: dataComp, backgroundColor: '#e2b84b' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Horas' } } } }
   });
-}
-
-function renderChartTipo(data) {
-  const ctx = document.getElementById('chartTipo').getContext('2d');
-  if (APP.chartTipo) APP.chartTipo.destroy();
-  const labels = Object.keys(data), values = Object.values(data);
-  const colors = ['#0f172a', '#334155', '#f97316', '#10b981', '#ef4444', '#0ea5e9'];
-  APP.chartTipo = new Chart(ctx, {
+  
+  if (chartPie) chartPie.destroy();
+  chartPie = new Chart(document.getElementById('chartPie'), {
     type: 'doughnut',
-    data: { labels, datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth: 2, borderColor: '#fff' }] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+    data: { labels: ['Acumulado', 'Compensado', 'Pendiente'], datasets: [{
+      data: [(d.totalAcumulado/60).toFixed(2), (d.totalCompensado/60).toFixed(2), (d.totalPendiente/60).toFixed(2)],
+      backgroundColor: ['#173f66', '#e2b84b', '#285b87']
+    }]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
   });
-  const legend = document.getElementById('chartTipoLegend');
-  if (legend) {
-    legend.innerHTML = labels.map((l, i) => `<div class="d-flex justify-content-between mb-1"><span class="d-flex align-items-center gap-2"><span style="width:10px;height:10px;border-radius:3px;background:${colors[i]}"></span>${l}</span><strong>${values[i]}</strong></div>`).join('');
-  }
+  
+  if (chartTop) chartTop.destroy();
+  chartTop = new Chart(document.getElementById('chartTop'), {
+    type: 'bar',
+    data: { labels: (d.topFuncionarios||[]).map(f => f.nombre), datasets: [{
+      label: 'Saldo (horas)', data: (d.topFuncionarios||[]).map(f => (f.saldo/60).toFixed(2)), backgroundColor: '#173f66'
+    }]},
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+  });
 }
 
-async function loadFuncionarios() {
-  showLoader(true);
+// ============================================================
+// FUNCIONARIOS
+// ============================================================
+async function cargarFuncionarios() {
   try {
-    const lista = await call('obtenerFuncionarios', APP.token, false);
-    document.getElementById('tblFuncionarios').innerHTML = lista.map(f => `
+    const filtro = document.getElementById('buscarFuncionario').value;
+    const r = await callServer('listarFuncionarios', filtro);
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    const tbody = document.getElementById('tbodyFuncionarios');
+    if (r.data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay funcionarios registrados</td></tr>';
+      return;
+    }
+    tbody.innerHTML = r.data.map(f => `
       <tr>
-        <td class="fw-semibold">${f.identificacion}</td>
-        <td>${f.nombres}</td>
-        <td>${f.cargo||'-'}</td>
-        <td>${f.dependencia||'-'}</td>
-        <td><span class="badge-estado ${f.estado==='activo'?'badge-aprobado':'badge-rechazado'}">${f.estado}</span></td>
-        <td class="text-end">
-          <button class="btn btn-sm btn-light border text-primary me-1" onclick='openFuncionarioModal(${JSON.stringify(f)})'><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-light border text-danger" onclick="eliminarFuncionario('${f.id}')"><i class="bi bi-trash"></i></button>
+        <td><strong>${f.documento}</strong></td><td>${f.nombre}</td><td>${f.cargo || '-'}</td><td>${f.dependencia || '-'}</td>
+        <td><span class="badge bg-primario-soft" style="padding:5px 10px;border-radius:15px;">${f.saldoFormato}</span></td>
+        <td><span class="badge-estado badge-${f.estado.toLowerCase()}">${f.estado}</span></td>
+        <td class="text-center">
+          <button class="btn btn-sm btn-outline-primary" onclick="editarFuncionario('${f.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-info" onclick="verHistorial('${f.id}','${f.nombre.replace(/'/g,"\\'")}')" title="Historial"><i class="bi bi-clock-history"></i></button>
+          <button class="btn btn-sm btn-outline-${f.estado === 'ACTIVO' ? 'warning' : 'success'}" onclick="toggleEstado('${f.id}','${f.estado}')" title="Cambiar estado"><i class="bi bi-${f.estado === 'ACTIVO' ? 'pause' : 'play'}-circle"></i></button>
         </td>
-      </tr>`).join('') || '<tr><td colspan="6" class="text-center py-4 text-muted">Sin funcionarios registrados</td></tr>';
-  } finally { showLoader(false); }
+      </tr>`).join('');
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
-function openFuncionarioModal(f) {
+function abrirModalFuncionario() {
   document.getElementById('formFuncionario').reset();
   document.getElementById('funcId').value = '';
-  if (f) {
-    document.getElementById('funcId').value = f.id;
-    document.getElementById('funcIdentificacion').value = f.identificacion;
-    document.getElementById('funcNombres').value = f.nombres;
-    document.getElementById('funcCargo').value = f.cargo || '';
-    document.getElementById('funcDependencia').value = f.dependencia || '';
-    document.getElementById('funcCorreo').value = f.correo || '';
-    document.getElementById('funcEstado').value = f.estado;
-    document.getElementById('funcObs').value = f.observaciones || '';
-  }
+  document.getElementById('tituloModalFunc').textContent = 'Nuevo Funcionario';
   new bootstrap.Modal(document.getElementById('modalFuncionario')).show();
 }
 
+async function editarFuncionario(id) {
+  try {
+    const r = await callServer('obtenerFuncionario', id);
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    const f = r.data;
+    document.getElementById('funcId').value = f.id;
+    document.getElementById('funcDocumento').value = f.documento;
+    document.getElementById('funcNombre').value = f.nombre;
+    document.getElementById('funcCargo').value = f.cargo || '';
+    document.getElementById('funcDependencia').value = f.dependencia || '';
+    document.getElementById('funcEstado').value = f.estado;
+    document.getElementById('tituloModalFunc').textContent = 'Editar Funcionario';
+    new bootstrap.Modal(document.getElementById('modalFuncionario')).show();
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
 async function guardarFuncionario() {
-  const data = {
-    id: document.getElementById('funcId').value || null,
-    identificacion: document.getElementById('funcIdentificacion').value,
-    nombres: document.getElementById('funcNombres').value,
-    cargo: document.getElementById('funcCargo').value,
-    dependencia: document.getElementById('funcDependencia').value,
-    correo: document.getElementById('funcCorreo').value,
-    estado: document.getElementById('funcEstado').value,
-    observaciones: document.getElementById('funcObs').value
+  const datos = {
+    id: document.getElementById('funcId').value,
+    documento: document.getElementById('funcDocumento').value.trim(),
+    nombre: document.getElementById('funcNombre').value.trim(),
+    cargo: document.getElementById('funcCargo').value.trim(),
+    dependencia: document.getElementById('funcDependencia').value.trim(),
+    estado: document.getElementById('funcEstado').value
   };
-  showLoader(true);
+  if (!datos.documento || !datos.nombre) { mostrarToast('Documento y nombre son obligatorios', 'warning'); return; }
   try {
-    const r = await call('guardarFuncionario', data, APP.token);
-    toast(r.message, r.success ? 'success' : 'error');
-    if (r.success) { bootstrap.Modal.getInstance(document.getElementById('modalFuncionario')).hide(); loadFuncionarios(); }
-  } finally { showLoader(false); }
+    const r = await callServer('guardarFuncionario', datos, usuarioActual.usuario);
+    if (r.ok) {
+      mostrarToast(r.mensaje, 'success');
+      bootstrap.Modal.getInstance(document.getElementById('modalFuncionario')).hide();
+      await cargarFuncionarios();
+    } else { mostrarToast(r.mensaje, 'danger'); }
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
-async function eliminarFuncionario(id) {
-  if (!confirm('¿Seguro que desea eliminar este funcionario?')) return;
-  showLoader(true);
+async function toggleEstado(id, estadoActual) {
+  const nuevo = estadoActual === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+  confirmar(`¿Desea cambiar el estado a <strong>${nuevo}</strong>?`, async () => {
+    try {
+      const r = await callServer('cambiarEstadoFuncionario', id, nuevo, usuarioActual.usuario);
+      if (r.ok) { mostrarToast(r.mensaje, 'success'); await cargarFuncionarios(); }
+      else { mostrarToast(r.mensaje, 'danger'); }
+    } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+  });
+}
+
+async function verHistorial(id, nombre) {
   try {
-    const r = await call('eliminarFuncionario', id, APP.token);
-    toast(r.message, r.success ? 'success' : 'error');
-    if (r.success) loadFuncionarios();
-  } finally { showLoader(false); }
-}
-
-async function loadFormRegistro() {
-  showLoader(true);
-  try {
-    funcionariosCache = await call('obtenerFuncionarios', APP.token, true) || [];
-    document.getElementById('regFuncionarioSearch').value = '';
-    document.getElementById('regFuncionario').value = '';
-    document.getElementById('funcionarioResults').style.display = 'none';
-  } finally { showLoader(false); }
-}
-
-function buscarFuncionario(txt) {
-  const term = txt.toLowerCase().trim();
-  const res = document.getElementById('funcionarioResults');
-  if (!term) { res.style.display = 'none'; return; }
-  const filtered = funcionariosCache.filter(f => f.nombres.toLowerCase().includes(term) || String(f.identificacion).includes(term));
-  if (filtered.length > 0) {
-    res.innerHTML = filtered.map(f => `<div class="funcionario-item" onclick="selectFuncionario('${f.id}', '${f.nombres.replace(/'/g, "\\'")}', '${f.identificacion}')"><div class="fw-semibold">${f.nombres}</div><div class="small text-muted">Cédula: ${f.identificacion}</div></div>`).join('');
-  } else {
-    res.innerHTML = '<div class="p-3 text-muted text-center small">No se encontraron resultados</div>';
-  }
-  res.style.display = 'block';
-}
-
-function selectFuncionario(id, nombre, ced) {
-  document.getElementById('regFuncionario').value = id;
-  document.getElementById('regFuncionarioSearch').value = `${nombre} (${ced})`;
-  document.getElementById('funcionarioResults').style.display = 'none';
-}
-
-function evaluarTipoJornada(tipo) {
-  document.getElementById('regEsResta').checked = tipo.includes('(Resta)');
-  calcDuracion();
-}
-
-['regFechaIni','regHoraIni','regFechaFin','regHoraFin','regDescanso','regEsResta'].forEach(id => {
-  document.getElementById(id).addEventListener('change', calcDuracion);
-});
-
-async function calcDuracion() {
-  const fi = document.getElementById('regFechaIni').value;
-  const hi = document.getElementById('regHoraIni').value;
-  const ff = document.getElementById('regFechaFin').value;
-  const hf = document.getElementById('regHoraFin').value;
-  const d = document.getElementById('regDescanso').value;
-  const esResta = document.getElementById('regEsResta').checked;
-  if (!fi || !hi || !ff || !hf) return;
-  try {
-    const r = await call('calcularMinutos', fi, hi, ff, hf, d, esResta);
-    const box = document.getElementById('regDuracion');
-    if (r.error) { box.value = r.error; box.className = 'form-control bg-light text-danger fw-bold'; }
-    else { box.value = fmtDuracion(r.duracionMinutos); box.className = r.duracionMinutos < 0 ? 'form-control bg-danger bg-opacity-10 text-danger fw-bold' : 'form-control bg-light text-success fw-bold'; }
-  } catch(e){}
-}
-
-async function guardarRegistro() {
-  const idF = document.getElementById('regFuncionario').value;
-  if (!idF) { toast('Debe seleccionar un funcionario válido', 'error'); return; }
-  const data = {
-    idFuncionario: idF,
-    fechaInicio: document.getElementById('regFechaIni').value,
-    horaInicio: document.getElementById('regHoraIni').value,
-    fechaFin: document.getElementById('regFechaFin').value,
-    horaFin: document.getElementById('regHoraFin').value,
-    descanso: document.getElementById('regDescanso').value,
-    esResta: document.getElementById('regEsResta').checked,
-    tipoJornada: document.getElementById('regTipo').value,
-    motivo: document.getElementById('regMotivo').value,
-    actividad: document.getElementById('regActividad').value,
-    observaciones: document.getElementById('regObs').value
-  };
-  showLoader(true);
-  try {
-    const r = await call('guardarRegistroTiempo', data, APP.token);
-    toast(r.message, r.success ? 'success' : 'error');
-    if (r.success) { document.getElementById('formRegistro').reset(); document.getElementById('regEsResta').checked = false; }
-  } finally { showLoader(false); }
-}
-
-async function loadHistorial() {
-  showLoader(true);
-  try {
-    const regs = await call('obtenerRegistrosTiempo', APP.token, {});
-    document.getElementById('tblHistorial').innerHTML = regs.map(r => `
-      <tr>
-        <td class="fw-semibold">#${r.consecutivo}</td>
-        <td>${r.nombreFuncionario}</td>
-        <td>${r.dependencia}</td>
-        <td>${r.fechaInicio} ${r.horaInicio}</td>
-        <td class="fw-semibold ${r.duracionMinutos < 0 ? 'text-danger' : 'text-success'}">${fmtDuracion(r.duracionMinutos)}</td>
-        <td>${r.tipoJornada}</td>
-        <td>${badgeEstado(r.estado)}</td>
-        <td class="text-end"><button class="btn btn-sm btn-light border text-danger" onclick="eliminarRegistro('${r.idRegistro}')"><i class="bi bi-trash"></i></button></td>
-      </tr>`).join('') || '<tr><td colspan="8" class="text-center py-4 text-muted">Sin registros históricos</td></tr>';
-  } finally { showLoader(false); }
-}
-
-async function eliminarRegistro(id) {
-  if (!confirm('¿Eliminar este registro?')) return;
-  showLoader(true);
-  try {
-    const r = await call('eliminarRegistro', id, APP.token);
-    toast(r.message, r.success ? 'success' : 'error');
-    if (r.success) loadHistorial();
-  } finally { showLoader(false); }
-}
-
-async function loadAprobaciones() {
-  showLoader(true);
-  try {
-    const regs = await call('obtenerRegistrosTiempo', APP.token, { estado: 'pendiente' });
-    document.getElementById('tblAprobaciones').innerHTML = regs.map(r => `
-      <tr>
-        <td class="fw-semibold">#${r.consecutivo}</td>
-        <td>${r.nombreFuncionario}</td>
-        <td><small class="text-muted">${r.fechaInicio} ${r.horaInicio} → ${r.fechaFin} ${r.horaFin}</small></td>
-        <td class="fw-semibold ${r.duracionMinutos < 0 ? 'text-danger' : 'text-success'}">${fmtDuracion(r.duracionMinutos)}</td>
-        <td>${r.motivo}</td>
-        <td class="text-end">
-          <button class="btn btn-sm btn-success px-2 py-1 me-1" onclick="aprobar('${r.idRegistro}')"><i class="bi bi-check-lg"></i> Aprobar</button>
-          <button class="btn btn-sm btn-danger px-2 py-1" onclick="rechazar('${r.idRegistro}')"><i class="bi bi-x-lg"></i> Rechazar</button>
-        </td>
-      </tr>`).join('') || '<tr><td colspan="6" class="text-center py-4 text-muted">No hay registros pendientes de aprobación</td></tr>';
-  } finally { showLoader(false); }
-}
-
-async function aprobar(id) {
-  const obs = prompt('Observación de aprobación (opcional):') || '';
-  showLoader(true);
-  try {
-    const r = await call('cambiarEstadoRegistro', id, 'aprobado', obs, APP.token);
-    toast(r.message, r.success ? 'success' : 'error');
-    if (r.success) loadAprobaciones();
-  } finally { showLoader(false); }
-}
-
-async function rechazar(id) {
-  const obs = prompt('Motivo obligatorio del rechazo:');
-  if (!obs) { toast('Debe indicar el motivo del rechazo', 'warning'); return; }
-  showLoader(true);
-  try {
-    const r = await call('cambiarEstadoRegistro', id, 'rechazado', obs, APP.token);
-    toast(r.message, r.success ? 'success' : 'error');
-    if (r.success) loadAprobaciones();
-  } finally { showLoader(false); }
-}
-
-async function loadAcumulados() {
-  showLoader(true);
-  try {
-    const data = await call('obtenerAcumulados', APP.token);
-    document.getElementById('tblAcumulados').innerHTML = data.map(a => `
-      <tr>
-        <td class="fw-semibold">${a.funcionario}</td>
-        <td>${a.jornadas}</td>
-        <td>${a.diasCalendario}</td>
-        <td class="${a.totalMinutos < 0 ? 'text-danger fw-bold' : ''}">${a.totalMinutos}</td>
-        <td class="fw-semibold ${a.totalMinutos < 0 ? 'text-danger' : 'text-primary'}">${a.totalHorasMin}</td>
-        <td><span class="badge ${a.totalMinutos < 0 ? 'bg-danger' : 'bg-info'} bg-opacity-10 text-dark">${a.equivalenciaDias} días</span></td>
-      </tr>`).join('') || '<tr><td colspan="6" class="text-center py-4 text-muted">Sin datos acumulados</td></tr>';
-  } finally { showLoader(false); }
-}
-
-async function loadReportes() {
-  try {
-    const funcs = await call('obtenerFuncionarios', APP.token, false);
-    document.getElementById('repFuncionario').innerHTML = '<option value="">Todos</option>' + funcs.map(f => `<option value="${f.id}">${f.nombres}</option>`).join('');
-  } catch(e){}
-}
-
-async function exportarPDF() {
-  showLoader(true);
-  try {
-    const filtros = { funcionario: document.getElementById('repFuncionario').value || null, estado: document.getElementById('repEstado').value || null, fechaDesde: document.getElementById('repDesde').value || null, fechaHasta: document.getElementById('repHasta').value || null };
-    const data = await call('generarDatosReporte', filtros, APP.token);
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFillColor(15, 23, 42); doc.rect(0, 0, 210, 38, 'F');
-    doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont(undefined, 'bold');
-    doc.text(data.institucion || 'Institución', 14, 18);
-    doc.setFontSize(10); doc.setFont(undefined, 'normal');
-    doc.text('Reporte Consolidado de Tiempos Extra y Compensatorios', 14, 27);
-    doc.setTextColor(100, 100, 100); doc.setFontSize(8);
-    doc.text(`Generado: ${data.fechaGeneracion} | Total Registros: ${data.totalRegistros}`, 14, 46);
+    const r = await callServer('listarMovimientos', { idFuncionario: id });
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    const saldo = await callServer('obtenerSaldoDetalle', id);
     
-    const rows = data.registros.map(r => [r.consecutivo, r.nombreFuncionario, r.dependencia, `${r.fechaInicio} ${r.horaInicio}`, fmtDuracion(r.duracionMinutos), r.tipoJornada, r.estado, r.motivo]);
-    doc.autoTable({ startY: 52, head: [['Cons.','Funcionario','Dependencia','Fecha/Hora','Duración','Tipo','Estado','Motivo']], body: rows, styles: { fontSize: 8, cellPadding: 3 }, headStyles: { fillColor: [15, 23, 42], textColor: 255 } });
-    doc.save(`ReporteTiempos_${new Date().toISOString().substring(0,10)}.pdf`);
-    toast('PDF generado correctamente');
-  } catch(e) { toast('Error al generar PDF', 'error'); }
-  finally { showLoader(false); }
+    let html = `<div class="saldo-display mb-3"><div class="etiqueta">Saldo Actual de ${nombre}</div><div class="valor">${saldo.data.saldoFormato}</div>
+      <div style="font-size:12px;margin-top:8px;">Acumulado: ${saldo.data.acumuladoFormato} | Compensado: ${saldo.data.compensadoFormato}</div></div>`;
+    
+    if (!r.data || r.data.length === 0) {
+      html += '<div class="empty-state"><i class="bi bi-inbox"></i><p>Sin movimientos registrados</p></div>';
+    } else {
+      html += `<div class="table-responsive"><table class="table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Minutos</th><th>Saldo</th></tr></thead><tbody>`;
+      html += r.data.map(m => `<tr><td>${m.fecha}</td><td><span class="badge-estado badge-${m.tipo.toLowerCase().replace('_','-').substring(0,10)}">${m.tipo}</span></td><td>${m.descripcion}</td><td><strong>${m.tipo.includes('DESCUENTO') || m.tipo === 'REVERSO_ACUMULACIÓN' ? '-' : '+'}${minutosAHorasMinutos(m.minutos)}</strong></td><td>${minutosAHorasMinutos(m.saldoNuevo)}</td></tr>`).join('');
+      html += '</tbody></table></div>';
+    }
+    document.getElementById('contenidoHistorial').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('modalHistorial')).show();
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
-async function loadConfig() {
-  showLoader(true);
+// ============================================================
+// SELECTORES Y AUTOCOMPLETAR
+// ============================================================
+async function cargarSelectoresFunc(idSelect = null) {
   try {
-    const c = await call('obtenerConfiguracion', APP.token);
-    document.getElementById('cfgNombre').value = c.NOMBRE_INSTITUCION || '';
-    document.getElementById('cfgJornada').value = c.JORNADA_DIARIA_MINUTOS || 480;
-  } finally { showLoader(false); }
+    const r = await callServer('listarFuncionarios');
+    if (!r.ok) return;
+    const activos = r.data.filter(f => f.estado === 'ACTIVO');
+    const opciones = '<option value="">Seleccione...</option>' + activos.map(f => `<option value="${f.id}">${f.nombre} - ${f.documento}</option>`).join('');
+    
+    if (idSelect) {
+      document.getElementById(idSelect).innerHTML = opciones;
+    } else {
+      const todos = r.data.map(f => `<option value="${f.id}">${f.nombre}</option>`).join('');
+      document.getElementById('filtroTEFunc').innerHTML = '<option value="">Todos los funcionarios</option>' + todos;
+      document.getElementById('filtroTCFunc').innerHTML = '<option value="">Todos los funcionarios</option>' + todos;
+      document.getElementById('filtroMovFunc').innerHTML = '<option value="">Todos</option>' + todos;
+      document.getElementById('repFuncionario').innerHTML = '<option value="">Seleccione...</option>' + opciones;
+    }
+  } catch (e) { console.error(e); }
 }
 
-async function guardarConfig() {
-  const data = { NOMBRE_INSTITUCION: document.getElementById('cfgNombre').value, JORNADA_DIARIA_MINUTOS: document.getElementById('cfgJornada').value };
-  showLoader(true);
+function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = null) {
+  const input = document.getElementById(inputId);
+  const lista = document.getElementById(listaId);
+  let funcionarios = [];
+  let timeout;
+  
+  input.addEventListener('focus', async () => {
+    if (funcionarios.length === 0) {
+      const r = await callServer('listarFuncionarios');
+      if (r.ok) funcionarios = r.data.filter(f => f.estado === 'ACTIVO');
+    }
+    filtrarLista();
+  });
+  
+  input.addEventListener('input', () => { clearTimeout(timeout); timeout = setTimeout(filtrarLista, 200); });
+  
+  function filtrarLista() {
+    const txt = input.value.toLowerCase();
+    const filtrados = funcionarios.filter(f => f.nombre.toLowerCase().includes(txt) || f.documento.toLowerCase().includes(txt)).slice(0, 10);
+    if (filtrados.length === 0) { lista.style.display = 'none'; return; }
+    
+    lista.innerHTML = filtrados.map(f => `
+      <a href="#" class="list-group-item list-group-item-action" onclick="event.preventDefault(); seleccionarFuncionario('${f.id}','${f.nombre.replace(/'/g,"\\'")}','${f.documento}', ${f.saldoMinutos || 0}, '${listaId}', '${hiddenId}', '${docId}', ${saldoId ? `'${saldoId}'` : 'null'}, '${inputId}')">
+        <strong>${f.nombre}</strong><br><small class="text-muted">Doc: ${f.documento} | Saldo: ${f.saldoFormato}</small>
+      </a>`).join('');
+    lista.style.display = 'block';
+  }
+  
+  document.addEventListener('click', (e) => { if (!input.contains(e.target) && !lista.contains(e.target)) lista.style.display = 'none'; });
+}
+
+function seleccionarFuncionario(id, nombre, documento, saldo, listaId, hiddenId, docId, saldoId, inputId) {
+  document.getElementById(inputId).value = nombre;
+  document.getElementById(hiddenId).value = id;
+  document.getElementById(docId).value = documento;
+  if (saldoId) document.getElementById(saldoId).textContent = minutosAHorasMinutos(saldo);
+  document.getElementById(listaId).style.display = 'none';
+}
+
+// ============================================================
+// TIEMPO EXTRA Y COMPENSATORIO
+// ============================================================
+function calcularTotalTE() {
+  const hi = document.getElementById('teHoraInicio').value;
+  const hf = document.getElementById('teHoraFin').value;
+  if (!hi || !hf) return;
+  const [hI, mI] = hi.split(':').map(Number);
+  const [hF, mF] = hf.split(':').map(Number);
+  let inicioMin = hI * 60 + mI;
+  let finMin = hF * 60 + mF;
+  if (finMin <= inicioMin) finMin += 24 * 60;
+  const total = finMin - inicioMin;
+  document.getElementById('teTotalHoras').value = Math.floor(total / 60) + ' h ' + (total % 60) + ' min';
+  document.getElementById('teTotalMinutos').value = total + ' min';
+}
+
+async function guardarTiempoExtra() {
+  const datos = {
+    idFuncionario: document.getElementById('teIdFuncionario').value,
+    fechaLaborada: document.getElementById('teFecha').value,
+    tipoTiempo: document.getElementById('teTipo').value,
+    horaInicio: document.getElementById('teHoraInicio').value,
+    horaFin: document.getElementById('teHoraFin').value,
+    observaciones: document.getElementById('teObservaciones').value
+  };
+  if (!datos.idFuncionario || !datos.fechaLaborada || !datos.tipoTiempo || !datos.horaInicio || !datos.horaFin) {
+    mostrarToast('Complete todos los campos obligatorios', 'warning'); return;
+  }
   try {
-    const r = await call('guardarConfiguracion', data, APP.token);
-    toast(r.message, r.success ? 'success' : 'error');
-  } finally { showLoader(false); }
+    const r = await callServer('registrarTiempoExtra', datos, usuarioActual.usuario);
+    if (r.ok) {
+      mostrarToast(`✓ ${r.mensaje}. Nuevo saldo: ${r.saldoFormato}`, 'success');
+      document.getElementById('formTiempoExtra').reset();
+      document.getElementById('teIdFuncionario').value = '';
+      document.getElementById('teDocumento').value = '';
+      await cargarTiempoExtra();
+    } else { mostrarToast(r.mensaje, 'danger'); }
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
-async function loadBitacora() {
-  showLoader(true);
+async function cargarTiempoExtra() {
+  const filtros = {
+    idFuncionario: document.getElementById('filtroTEFunc').value,
+    fechaInicio: document.getElementById('filtroTEFechaIni').value,
+    fechaFin: document.getElementById('filtroTEFechaFin').value
+  };
   try {
-    const lista = await call('obtenerBitacora', APP.token, 150);
-    document.getElementById('tblBitacora').innerHTML = lista.map(b => `
-      <tr>
-        <td><small class="text-muted">${b.fechaHora}</small></td>
-        <td class="fw-semibold">${b.administrador}</td>
-        <td><span class="badge bg-secondary bg-opacity-10 text-dark">${b.accion}</span></td>
-        <td>${b.idRegistro || '-'}</td>
-        <td>${b.motivo||'-'}</td>
-      </tr>`).join('') || '<tr><td colspan="5" class="text-center py-4 text-muted">Sin eventos registrados</td></tr>';
-  } finally { showLoader(false); }
+    const r = await callServer('listarTiempoExtra', filtros);
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    const tbody = document.getElementById('tbodyTiempoExtra');
+    if (!r.data || r.data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Sin registros</td></tr>'; return;
+    }
+    tbody.innerHTML = r.data.map(x => `
+      <tr><td>${x.fechaLaborada}</td><td>${x.nombre}</td><td><span class="badge-estado badge-acumulacion">${x.tipoTiempo}</span></td>
+      <td>${x.horaInicio} - ${x.horaFin}</td><td><strong>${minutosAHorasMinutos(x.totalMinutos)}</strong></td>
+      <td class="text-center"><button class="btn btn-sm btn-outline-warning" onclick="abrirReverso('${x.id}','TE')" title="Reversar"><i class="bi bi-arrow-counterclockwise"></i></button></td></tr>`).join('');
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
-document.getElementById('loginUser').focus();
+function calcularTotalTC() {
+  const h = parseInt(document.getElementById('tcHoras').value) || 0;
+  const m = parseInt(document.getElementById('tcMinutos').value) || 0;
+  document.getElementById('tcTotal').value = minutosAHorasMinutos(h * 60 + m);
+}
+
+async function guardarCompensatorio() {
+  const datos = {
+    idFuncionario: document.getElementById('tcIdFuncionario').value,
+    fechaCompensatorio: document.getElementById('tcFecha').value,
+    horas: document.getElementById('tcHoras').value,
+    minutos: document.getElementById('tcMinutos').value,
+    motivo: document.getElementById('tcMotivo').value,
+    observaciones: document.getElementById('tcObservaciones').value
+  };
+  if (!datos.idFuncionario || !datos.fechaCompensatorio || !datos.motivo) { mostrarToast('Complete todos los campos obligatorios', 'warning'); return; }
+  const total = (parseInt(datos.horas) || 0) * 60 + (parseInt(datos.minutos) || 0);
+  if (total <= 0) { mostrarToast('El tiempo a descontar debe ser mayor a cero', 'warning'); return; }
+  
+  try {
+    const r = await callServer('registrarTiempoCompensatorio', datos, usuarioActual.usuario);
+    if (r.ok) {
+      mostrarToast(`✓ ${r.mensaje}. Nuevo saldo: ${r.saldoFormato}`, 'success');
+      document.getElementById('formCompensatorio').reset();
+      document.getElementById('tcIdFuncionario').value = '';
+      document.getElementById('tcDocumento').value = '';
+      document.getElementById('tcSaldoDisponible').textContent = '00:00';
+      document.getElementById('tcTotal').value = '';
+      await cargarCompensatorio();
+    } else { mostrarToast(r.mensaje, 'danger'); }
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
+async function cargarCompensatorio() {
+  const filtros = {
+    idFuncionario: document.getElementById('filtroTCFunc').value,
+    fechaInicio: document.getElementById('filtroTCFechaIni').value,
+    fechaFin: document.getElementById('filtroTCFechaFin').value
+  };
+  try {
+    const r = await callServer('listarTiempoCompensatorio', filtros);
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    const tbody = document.getElementById('tbodyCompensatorio');
+    if (!r.data || r.data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Sin registros</td></tr>'; return;
+    }
+    tbody.innerHTML = r.data.map(x => `
+      <tr><td>${x.fecha}</td><td>${x.nombre}</td><td><strong style="color:var(--color-peligro);">-${minutosAHorasMinutos(x.totalMinutos)}</strong></td>
+      <td>${x.motivo}</td>
+      <td class="text-center"><button class="btn btn-sm btn-outline-warning" onclick="abrirReverso('${x.id}','TC')" title="Reversar"><i class="bi bi-arrow-counterclockwise"></i></button></td></tr>`).join('');
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
+// ============================================================
+// REVERSOS Y CONSULTAS
+// ============================================================
+function abrirReverso(id, tipo) {
+  document.getElementById('revId').value = id;
+  document.getElementById('revTipo').value = tipo;
+  document.getElementById('revMotivo').value = '';
+  new bootstrap.Modal(document.getElementById('modalReverso')).show();
+}
+
+async function ejecutarReverso() {
+  const id = document.getElementById('revId').value;
+  const tipo = document.getElementById('revTipo').value;
+  const motivo = document.getElementById('revMotivo').value.trim();
+  if (!motivo) { mostrarToast('El motivo es obligatorio', 'warning'); return; }
+  
+  confirmar('¿Confirma la reversión del registro?', async () => {
+    try {
+      let r;
+      if (tipo === 'TE') r = await callServer('reversarTiempoExtra', id, motivo, usuarioActual.usuario);
+      else r = await callServer('reversarTiempoCompensatorio', id, motivo, usuarioActual.usuario);
+      
+      if (r.ok) {
+        mostrarToast(`✓ ${r.mensaje}. Nuevo saldo: ${r.saldoFormato}`, 'success');
+        bootstrap.Modal.getInstance(document.getElementById('modalReverso')).hide();
+        await cargarTiempoExtra();
+        await cargarCompensatorio();
+      } else { mostrarToast(r.mensaje, 'danger'); }
+    } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+  });
+}
+
+async function cargarMovimientos() {
+  const filtros = {
+    idFuncionario: document.getElementById('filtroMovFunc').value,
+    fechaInicio: document.getElementById('filtroMovFechaIni').value,
+    fechaFin: document.getElementById('filtroMovFechaFin').value,
+    tipo: document.getElementById('filtroMovTipo').value
+  };
+  try {
+    const r = await callServer('listarMovimientos', filtros);
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    const tbody = document.getElementById('tbodyMovimientos');
+    if (!r.data || r.data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Sin movimientos</td></tr>'; return;
+    }
+    tbody.innerHTML = r.data.map(m => {
+      const esDescuento = m.tipo === 'DESCUENTO' || m.tipo === 'REVERSO_ACUMULACIÓN';
+      return `<tr><td>${m.fecha}</td><td>${m.nombre}</td><td><span class="badge-estado badge-${m.tipo.toLowerCase().replace('_','-').substring(0,10)}">${m.tipo}</span></td>
+        <td>${m.descripcion}</td><td><strong style="color:${esDescuento ? 'var(--color-peligro)' : 'var(--color-exito)'}">${esDescuento ? '-' : '+'}${minutosAHorasMinutos(m.minutos)}</strong></td>
+        <td>${minutosAHorasMinutos(m.saldoAnterior)}</td><td><strong>${minutosAHorasMinutos(m.saldoNuevo)}</strong></td></tr>`;
+    }).join('');
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
+// ============================================================
+// REPORTES
+// ============================================================
+async function verReporteIndividual() {
+  const id = document.getElementById('repFuncionario').value;
+  if (!id) { mostrarToast('Seleccione un funcionario', 'warning'); return; }
+  try {
+    const r = await callServer('generarReporteFuncionario', id, document.getElementById('repFechaIni').value, document.getElementById('repFechaFin').value);
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    const d = r.data;
+    let html = `<div class="row mb-3"><div class="col-md-8"><h5>${d.funcionario.nombre}</h5><p class="mb-1"><strong>Documento:</strong> ${d.funcionario.documento}</p><p class="mb-1"><strong>Cargo:</strong> ${d.funcionario.cargo || '-'}</p></div>
+      <div class="col-md-4"><div class="saldo-display"><div class="etiqueta">Saldo Actual</div><div class="valor">${d.saldo.saldoFormato}</div></div></div></div>
+      <div class="row mb-3">
+        <div class="col-md-4"><div class="stat-card"><div class="label">Total Acumulado</div><div class="value" style="font-size:20px;color:var(--color-exito);">${d.saldo.acumuladoFormato}</div></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="label">Total Compensado</div><div class="value" style="font-size:20px;color:var(--color-peligro);">${d.saldo.compensadoFormato}</div></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="label">Saldo Disponible</div><div class="value" style="font-size:20px;color:var(--color-primario);">${d.saldo.saldoFormato}</div></div></div>
+      </div><h6 class="mt-4">Movimientos</h6><div class="table-responsive"><table class="table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Tiempo</th><th>Saldo</th></tr></thead><tbody>`;
+    
+    if (!d.movimientos || d.movimientos.length === 0) html += '<tr><td colspan="5" class="text-center text-muted">Sin movimientos</td></tr>';
+    else html += d.movimientos.map(m => {
+      const esDesc = m.tipo === 'DESCUENTO' || m.tipo === 'REVERSO_ACUMULACIÓN';
+      return `<tr><td>${m.fecha}</td><td><span class="badge-estado badge-${m.tipo.toLowerCase().replace('_','-').substring(0,10)}">${m.tipo}</span></td><td>${m.descripcion}</td><td><strong style="color:${esDesc ? 'var(--color-peligro)' : 'var(--color-exito)'}">${esDesc ? '-' : '+'}${m.formato}</strong></td><td>${minutosAHorasMinutos(m.saldoNuevo)}</td></tr>`;
+    }).join('');
+    
+    html += `</tbody></table></div><p class="text-muted small mt-3">Generado: ${d.fechaGeneracion}</p>`;
+    document.getElementById('tituloReporte').textContent = `Reporte Individual - ${d.funcionario.nombre}`;
+    document.getElementById('contenidoReporte').innerHTML = html;
+    document.getElementById('panelResultadoReporte').style.display = 'block';
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
+async function verReporteGeneral() {
+  try {
+    const r = await callServer('generarReporteGeneral', document.getElementById('repGenFechaIni').value, document.getElementById('repGenFechaFin').value);
+    if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
+    let html = `<h5>Estado General de Funcionarios</h5><p class="text-muted small">Generado: ${r.data.fechaGeneracion}</p><div class="table-responsive"><table class="table"><thead><tr><th>Documento</th><th>Nombre</th><th>Cargo</th><th>Acumulado</th><th>Compensado</th><th>Saldo</th></tr></thead><tbody>`;
+    if (!r.data.funcionarios || r.data.funcionarios.length === 0) html += '<tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>';
+    else html += r.data.funcionarios.map(f => `<tr><td>${f.documento}</td><td>${f.nombre}</td><td>${f.cargo || '-'}</td><td style="color:var(--color-exito);"><strong>${f.acumulado}</strong></td><td style="color:var(--color-peligro);"><strong>${f.compensado}</strong></td><td><span class="badge bg-primario-soft" style="padding:5px 10px;border-radius:15px;"><strong>${f.saldo}</strong></span></td></tr>`).join('');
+    html += '</tbody></table></div>';
+    document.getElementById('tituloReporte').textContent = 'Reporte General de Funcionarios';
+    document.getElementById('contenidoReporte').innerHTML = html;
+    document.getElementById('panelResultadoReporte').style.display = 'block';
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
+async function exportarReporteIndividual(formato) {
+  const id = document.getElementById('repFuncionario').value;
+  if (!id) { mostrarToast('Seleccione un funcionario', 'warning'); return; }
+  try {
+    if (formato === 'csv') {
+      const r = await callServer('exportarCSV', 'movimientos', { idFuncionario: id });
+      if (r.ok) descargarCSV(r.data.csv, r.data.filename);
+    } else { await verReporteIndividual(); setTimeout(() => window.print(), 500); }
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
+async function exportarGeneral(formato) {
+  try {
+    if (formato === 'csv') {
+      const r = await callServer('exportarCSV', 'funcionarios');
+      if (r.ok) descargarCSV(r.data.csv, r.data.filename);
+    } else { await verReporteGeneral(); setTimeout(() => window.print(), 500); }
+  } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
+function descargarCSV(csv, filename) {
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  mostrarToast('Archivo descargado', 'success');
+}
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  configurarAutocompletar('teBuscarFunc', 'teListaFuncionarios', 'teIdFuncionario', 'teDocumento');
+  configurarAutocompletar('tcBuscarFunc', 'tcListaFuncionarios', 'tcIdFuncionario', 'tcDocumento', 'tcSaldoDisponible');
+  
+  const ahora = new Date();
+  const hoy = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-' + String(ahora.getDate()).padStart(2, '0');
+  document.getElementById('teFecha').value = hoy;
+  document.getElementById('tcFecha').value = hoy;
+});
 </script>
 </body>
 </html>
