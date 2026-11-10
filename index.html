@@ -412,26 +412,34 @@
 // ============================================================
 // CONFIGURACIÓN DE CONEXIÓN CON GOOGLE APPS SCRIPT
 // ============================================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxq94H7R6N8HZencfVvpyDoM621E2GYa7Iomzv6kjsZTCz3kCBBH5eVBUc_ZUm-n92dow/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyqMTuV7RJCILX4m7P_ZVJbp76RKefqQuOvsEdwKsFDpSdbF-CnX48HfG9TTj9vKuK3GA/exec";
 
 // Función reemplazo de google.script.run para funcionar desde GitHub Pages
 async function callServer(funcion, ...args) {
   mostrarLoader();
   try {
-    // Usamos text/plain para evitar la preflight OPTIONS request que GAS no maneja bien por defecto
+    const token = usuarioActual && usuarioActual.token ? usuarioActual.token : '';
+    if (funcion !== 'login' && funcion !== 'logout' && !token) {
+      throw new Error('La sesión no está iniciada. Ingrese nuevamente.');
+    }
     const response = await fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ funcion: funcion, argumentos: args })
+      body: JSON.stringify({ funcion: funcion, argumentos: args, token: token })
     });
-    
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-    
     const resultado = await response.json();
+    if (resultado && resultado.sesionExpirada) {
+      usuarioActual = null;
+      document.getElementById('appContainer').classList.remove('active');
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('loginClave').value = '';
+      mostrarToast(resultado.mensaje, 'warning');
+    }
     return resultado;
   } catch (error) {
-    console.error("Error en callServer:", error);
-    throw new Error("Error de conexión con el servidor. Verifica la consola.");
+    console.error('Error en callServer:', error);
+    throw error;
   } finally {
     ocultarLoader();
   }
@@ -443,6 +451,10 @@ async function callServer(funcion, ...args) {
 let usuarioActual = null;
 let chartMes = null, chartPie = null, chartTop = null;
 
+function escapeHTML(valor) {
+  return String(valor == null ? '' : valor).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function mostrarLoader() { document.getElementById('loader').classList.add('active'); }
 function ocultarLoader() { document.getElementById('loader').classList.remove('active'); }
 
@@ -451,7 +463,7 @@ function mostrarToast(mensaje, tipo = 'success') {
   const iconos = { success: 'bi-check-circle-fill', danger: 'bi-x-circle-fill', warning: 'bi-exclamation-triangle-fill', info: 'bi-info-circle-fill' };
   const id = 'toast-' + Date.now();
   const html = `<div id="${id}" class="toast align-items-center text-white border-0 show" style="background:${colores[tipo]};" role="alert">
-    <div class="d-flex"><div class="toast-body"><i class="bi ${iconos[tipo]}"></i> ${mensaje}</div>
+    <div class="d-flex"><div class="toast-body"><i class="bi ${iconos[tipo]}"></i> ${escapeHTML(mensaje)}</div>
     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`;
   document.getElementById('toastContainer').insertAdjacentHTML('beforeend', html);
   setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 4000);
@@ -485,7 +497,7 @@ async function ejecutarLogin() {
   try {
     const r = await callServer('login', usuario, clave);
     if (r.ok) {
-      usuarioActual = { usuario: r.usuario, nombre: r.nombre };
+      usuarioActual = { usuario: r.usuario, nombre: r.nombre, token: r.token };
       document.getElementById('userName').textContent = r.nombre;
       document.getElementById('userAvatar').textContent = r.nombre.charAt(0).toUpperCase();
       document.getElementById('loginScreen').style.display = 'none';
@@ -502,6 +514,8 @@ async function ejecutarLogin() {
 
 function cerrarSesion() {
   confirmar('¿Desea cerrar la sesión?', () => {
+    const token = usuarioActual && usuarioActual.token ? usuarioActual.token : '';
+    if (token) callServer('logout').catch(err => console.warn('No se pudo invalidar la sesión en servidor:', err));
     usuarioActual = null;
     document.getElementById('appContainer').classList.remove('active');
     document.getElementById('loginScreen').style.display = 'flex';
@@ -554,9 +568,9 @@ async function cargarDashboard() {
       tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Sin registros recientes</td></tr>';
     } else {
       tbody.innerHTML = d.ultimosRegistros.map(x => `
-        <tr><td>${x.fecha}</td><td>${x.nombre}</td>
-        <td><span class="badge-estado badge-${x.tipo.toLowerCase().replace('_','-').substring(0,10)}">${x.tipo}</span></td>
-        <td><strong>${x.formato}</strong></td></tr>`).join('');
+        <tr><td>${escapeHTML(x.fecha)}</td><td>${escapeHTML(x.nombre)}</td>
+        <td><span class="badge-estado">${escapeHTML(x.tipo)}</span></td>
+        <td><strong>${escapeHTML(x.formato)}</strong></td></tr>`).join('');
     }
     renderizarGraficos(d);
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
@@ -612,12 +626,12 @@ async function cargarFuncionarios() {
     }
     tbody.innerHTML = r.data.map(f => `
       <tr>
-        <td><strong>${f.documento}</strong></td><td>${f.nombre}</td><td>${f.cargo || '-'}</td><td>${f.dependencia || '-'}</td>
-        <td><span class="badge bg-primario-soft" style="padding:5px 10px;border-radius:15px;">${f.saldoFormato}</span></td>
-        <td><span class="badge-estado badge-${f.estado.toLowerCase()}">${f.estado}</span></td>
+        <td><strong>${escapeHTML(f.documento)}</strong></td><td>${escapeHTML(f.nombre)}</td><td>${escapeHTML(f.cargo || '-')}</td><td>${escapeHTML(f.dependencia || '-')}</td>
+        <td><span class="badge bg-primario-soft" style="padding:5px 10px;border-radius:15px;">${escapeHTML(f.saldoFormato)}</span></td>
+        <td><span class="badge-estado badge-${f.estado === 'ACTIVO' ? 'activo' : 'inactivo'}">${escapeHTML(f.estado)}</span></td>
         <td class="text-center">
           <button class="btn btn-sm btn-outline-primary" onclick="editarFuncionario('${f.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-outline-info" onclick="verHistorial('${f.id}','${f.nombre.replace(/'/g,"\\'")}')" title="Historial"><i class="bi bi-clock-history"></i></button>
+          <button class="btn btn-sm btn-outline-info" onclick="verHistorial('${encodeURIComponent(f.id)}','${encodeURIComponent(f.nombre)}')" title="Historial"><i class="bi bi-clock-history"></i></button>
           <button class="btn btn-sm btn-outline-${f.estado === 'ACTIVO' ? 'warning' : 'success'}" onclick="toggleEstado('${f.id}','${f.estado}')" title="Cambiar estado"><i class="bi bi-${f.estado === 'ACTIVO' ? 'pause' : 'play'}-circle"></i></button>
         </td>
       </tr>`).join('');
@@ -679,19 +693,20 @@ async function toggleEstado(id, estadoActual) {
 }
 
 async function verHistorial(id, nombre) {
+  id = decodeURIComponent(id); nombre = decodeURIComponent(nombre);
   try {
     const r = await callServer('listarMovimientos', { idFuncionario: id });
     if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
     const saldo = await callServer('obtenerSaldoDetalle', id);
     
-    let html = `<div class="saldo-display mb-3"><div class="etiqueta">Saldo Actual de ${nombre}</div><div class="valor">${saldo.data.saldoFormato}</div>
-      <div style="font-size:12px;margin-top:8px;">Acumulado: ${saldo.data.acumuladoFormato} | Compensado: ${saldo.data.compensadoFormato}</div></div>`;
+    let html = `<div class="saldo-display mb-3"><div class="etiqueta">Saldo Actual de ${escapeHTML(nombre)}</div><div class="valor">${saldo.saldoFormato}</div>
+      <div style="font-size:12px;margin-top:8px;">Acumulado: ${saldo.acumuladoFormato} | Compensado: ${saldo.compensadoFormato}</div></div>`;
     
     if (!r.data || r.data.length === 0) {
       html += '<div class="empty-state"><i class="bi bi-inbox"></i><p>Sin movimientos registrados</p></div>';
     } else {
       html += `<div class="table-responsive"><table class="table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Minutos</th><th>Saldo</th></tr></thead><tbody>`;
-      html += r.data.map(m => `<tr><td>${m.fecha}</td><td><span class="badge-estado badge-${m.tipo.toLowerCase().replace('_','-').substring(0,10)}">${m.tipo}</span></td><td>${m.descripcion}</td><td><strong>${m.tipo.includes('DESCUENTO') || m.tipo === 'REVERSO_ACUMULACIÓN' ? '-' : '+'}${minutosAHorasMinutos(m.minutos)}</strong></td><td>${minutosAHorasMinutos(m.saldoNuevo)}</td></tr>`).join('');
+      html += r.data.map(m => `<tr><td>${escapeHTML(m.fecha)}</td><td><span class="badge-estado">${escapeHTML(m.tipo)}</span></td><td>${escapeHTML(m.descripcion)}</td><td><strong>${m.tipo.includes('DESCUENTO') || m.tipo === 'REVERSO_ACUMULACIÓN' ? '-' : '+'}${minutosAHorasMinutos(m.minutos)}</strong></td><td>${minutosAHorasMinutos(m.saldoNuevo)}</td></tr>`).join('');
       html += '</tbody></table></div>';
     }
     document.getElementById('contenidoHistorial').innerHTML = html;
@@ -707,12 +722,12 @@ async function cargarSelectoresFunc(idSelect = null) {
     const r = await callServer('listarFuncionarios');
     if (!r.ok) return;
     const activos = r.data.filter(f => f.estado === 'ACTIVO');
-    const opciones = '<option value="">Seleccione...</option>' + activos.map(f => `<option value="${f.id}">${f.nombre} - ${f.documento}</option>`).join('');
+    const opciones = '<option value="">Seleccione...</option>' + activos.map(f => `<option value="${escapeHTML(f.id)}">${escapeHTML(f.nombre)} - ${escapeHTML(f.documento)}</option>`).join('');
     
     if (idSelect) {
       document.getElementById(idSelect).innerHTML = opciones;
     } else {
-      const todos = r.data.map(f => `<option value="${f.id}">${f.nombre}</option>`).join('');
+      const todos = r.data.map(f => `<option value="${escapeHTML(f.id)}">${escapeHTML(f.nombre)}</option>`).join('');
       document.getElementById('filtroTEFunc').innerHTML = '<option value="">Todos los funcionarios</option>' + todos;
       document.getElementById('filtroTCFunc').innerHTML = '<option value="">Todos los funcionarios</option>' + todos;
       document.getElementById('filtroMovFunc').innerHTML = '<option value="">Todos</option>' + todos;
@@ -735,7 +750,7 @@ function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = nu
     filtrarLista();
   });
   
-  input.addEventListener('input', () => { clearTimeout(timeout); timeout = setTimeout(filtrarLista, 200); });
+  input.addEventListener('input', () => { document.getElementById(hiddenId).value = ''; document.getElementById(docId).value = ''; if (saldoId) document.getElementById(saldoId).textContent = '00:00'; clearTimeout(timeout); timeout = setTimeout(filtrarLista, 200); });
   
   function filtrarLista() {
     const txt = input.value.toLowerCase();
@@ -743,8 +758,8 @@ function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = nu
     if (filtrados.length === 0) { lista.style.display = 'none'; return; }
     
     lista.innerHTML = filtrados.map(f => `
-      <a href="#" class="list-group-item list-group-item-action" onclick="event.preventDefault(); seleccionarFuncionario('${f.id}','${f.nombre.replace(/'/g,"\\'")}','${f.documento}', ${f.saldoMinutos || 0}, '${listaId}', '${hiddenId}', '${docId}', ${saldoId ? `'${saldoId}'` : 'null'}, '${inputId}')">
-        <strong>${f.nombre}</strong><br><small class="text-muted">Doc: ${f.documento} | Saldo: ${f.saldoFormato}</small>
+      <a href="#" class="list-group-item list-group-item-action" onclick="event.preventDefault(); seleccionarFuncionario('${encodeURIComponent(f.id)}','${encodeURIComponent(f.nombre)}','${encodeURIComponent(f.documento)}', ${f.saldoMinutos || 0}, '${listaId}', '${hiddenId}', '${docId}', ${saldoId ? `'${saldoId}'` : 'null'}, '${inputId}')">
+        <strong>${escapeHTML(f.nombre)}</strong><br><small class="text-muted">Doc: ${escapeHTML(f.documento)} | Saldo: ${escapeHTML(f.saldoFormato)}</small>
       </a>`).join('');
     lista.style.display = 'block';
   }
@@ -753,6 +768,7 @@ function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = nu
 }
 
 function seleccionarFuncionario(id, nombre, documento, saldo, listaId, hiddenId, docId, saldoId, inputId) {
+  id = decodeURIComponent(id); nombre = decodeURIComponent(nombre); documento = decodeURIComponent(documento);
   document.getElementById(inputId).value = nombre;
   document.getElementById(hiddenId).value = id;
   document.getElementById(docId).value = documento;
@@ -815,9 +831,9 @@ async function cargarTiempoExtra() {
       tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Sin registros</td></tr>'; return;
     }
     tbody.innerHTML = r.data.map(x => `
-      <tr><td>${x.fechaLaborada}</td><td>${x.nombre}</td><td><span class="badge-estado badge-acumulacion">${x.tipoTiempo}</span></td>
-      <td>${x.horaInicio} - ${x.horaFin}</td><td><strong>${minutosAHorasMinutos(x.totalMinutos)}</strong></td>
-      <td class="text-center"><button class="btn btn-sm btn-outline-warning" onclick="abrirReverso('${x.id}','TE')" title="Reversar"><i class="bi bi-arrow-counterclockwise"></i></button></td></tr>`).join('');
+      <tr><td>${escapeHTML(x.fechaLaborada)}</td><td>${escapeHTML(x.nombre)}</td><td><span class="badge-estado badge-acumulacion">${escapeHTML(x.tipoTiempo)}</span></td>
+      <td>${escapeHTML(x.horaInicio)} - ${escapeHTML(x.horaFin)}</td><td><strong>${minutosAHorasMinutos(x.totalMinutos)}</strong></td>
+      <td class="text-center"><button class="btn btn-sm btn-outline-warning" onclick="abrirReverso('${encodeURIComponent(x.id)}','TE')" title="Reversar"><i class="bi bi-arrow-counterclockwise"></i></button></td></tr>`).join('');
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
@@ -838,6 +854,7 @@ async function guardarCompensatorio() {
   };
   if (!datos.idFuncionario || !datos.fechaCompensatorio || !datos.motivo) { mostrarToast('Complete todos los campos obligatorios', 'warning'); return; }
   const total = (parseInt(datos.horas) || 0) * 60 + (parseInt(datos.minutos) || 0);
+  if (!Number.isInteger(Number(datos.horas)) || Number(datos.horas) < 0 || !Number.isInteger(Number(datos.minutos)) || Number(datos.minutos) < 0 || Number(datos.minutos) > 59) { mostrarToast('Ingrese horas válidas y minutos entre 0 y 59', 'warning'); return; }
   if (total <= 0) { mostrarToast('El tiempo a descontar debe ser mayor a cero', 'warning'); return; }
   
   try {
@@ -868,9 +885,9 @@ async function cargarCompensatorio() {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Sin registros</td></tr>'; return;
     }
     tbody.innerHTML = r.data.map(x => `
-      <tr><td>${x.fecha}</td><td>${x.nombre}</td><td><strong style="color:var(--color-peligro);">-${minutosAHorasMinutos(x.totalMinutos)}</strong></td>
-      <td>${x.motivo}</td>
-      <td class="text-center"><button class="btn btn-sm btn-outline-warning" onclick="abrirReverso('${x.id}','TC')" title="Reversar"><i class="bi bi-arrow-counterclockwise"></i></button></td></tr>`).join('');
+      <tr><td>${escapeHTML(x.fecha)}</td><td>${escapeHTML(x.nombre)}</td><td><strong style="color:var(--color-peligro);">-${minutosAHorasMinutos(x.totalMinutos)}</strong></td>
+      <td>${escapeHTML(x.motivo)}</td>
+      <td class="text-center"><button class="btn btn-sm btn-outline-warning" onclick="abrirReverso('${encodeURIComponent(x.id)}','TC')" title="Reversar"><i class="bi bi-arrow-counterclockwise"></i></button></td></tr>`).join('');
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
@@ -878,6 +895,7 @@ async function cargarCompensatorio() {
 // REVERSOS Y CONSULTAS
 // ============================================================
 function abrirReverso(id, tipo) {
+  id = decodeURIComponent(id);
   document.getElementById('revId').value = id;
   document.getElementById('revTipo').value = tipo;
   document.getElementById('revMotivo').value = '';
@@ -922,8 +940,8 @@ async function cargarMovimientos() {
     }
     tbody.innerHTML = r.data.map(m => {
       const esDescuento = m.tipo === 'DESCUENTO' || m.tipo === 'REVERSO_ACUMULACIÓN';
-      return `<tr><td>${m.fecha}</td><td>${m.nombre}</td><td><span class="badge-estado badge-${m.tipo.toLowerCase().replace('_','-').substring(0,10)}">${m.tipo}</span></td>
-        <td>${m.descripcion}</td><td><strong style="color:${esDescuento ? 'var(--color-peligro)' : 'var(--color-exito)'}">${esDescuento ? '-' : '+'}${minutosAHorasMinutos(m.minutos)}</strong></td>
+      return `<tr><td>${escapeHTML(m.fecha)}</td><td>${escapeHTML(m.nombre)}</td><td><span class="badge-estado">${escapeHTML(m.tipo)}</span></td>
+        <td>${escapeHTML(m.descripcion)}</td><td><strong style="color:${esDescuento ? 'var(--color-peligro)' : 'var(--color-exito)'}">${esDescuento ? '-' : '+'}${minutosAHorasMinutos(m.minutos)}</strong></td>
         <td>${minutosAHorasMinutos(m.saldoAnterior)}</td><td><strong>${minutosAHorasMinutos(m.saldoNuevo)}</strong></td></tr>`;
     }).join('');
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
@@ -939,7 +957,7 @@ async function verReporteIndividual() {
     const r = await callServer('generarReporteFuncionario', id, document.getElementById('repFechaIni').value, document.getElementById('repFechaFin').value);
     if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
     const d = r.data;
-    let html = `<div class="row mb-3"><div class="col-md-8"><h5>${d.funcionario.nombre}</h5><p class="mb-1"><strong>Documento:</strong> ${d.funcionario.documento}</p><p class="mb-1"><strong>Cargo:</strong> ${d.funcionario.cargo || '-'}</p></div>
+    let html = `<div class="row mb-3"><div class="col-md-8"><h5>${escapeHTML(d.funcionario.nombre)}</h5><p class="mb-1"><strong>Documento:</strong> ${escapeHTML(d.funcionario.documento)}</p><p class="mb-1"><strong>Cargo:</strong> ${escapeHTML(d.funcionario.cargo || '-')}</p></div>
       <div class="col-md-4"><div class="saldo-display"><div class="etiqueta">Saldo Actual</div><div class="valor">${d.saldo.saldoFormato}</div></div></div></div>
       <div class="row mb-3">
         <div class="col-md-4"><div class="stat-card"><div class="label">Total Acumulado</div><div class="value" style="font-size:20px;color:var(--color-exito);">${d.saldo.acumuladoFormato}</div></div></div>
@@ -950,10 +968,10 @@ async function verReporteIndividual() {
     if (!d.movimientos || d.movimientos.length === 0) html += '<tr><td colspan="5" class="text-center text-muted">Sin movimientos</td></tr>';
     else html += d.movimientos.map(m => {
       const esDesc = m.tipo === 'DESCUENTO' || m.tipo === 'REVERSO_ACUMULACIÓN';
-      return `<tr><td>${m.fecha}</td><td><span class="badge-estado badge-${m.tipo.toLowerCase().replace('_','-').substring(0,10)}">${m.tipo}</span></td><td>${m.descripcion}</td><td><strong style="color:${esDesc ? 'var(--color-peligro)' : 'var(--color-exito)'}">${esDesc ? '-' : '+'}${m.formato}</strong></td><td>${minutosAHorasMinutos(m.saldoNuevo)}</td></tr>`;
+      return `<tr><td>${escapeHTML(m.fecha)}</td><td><span class="badge-estado">${escapeHTML(m.tipo)}</span></td><td>${escapeHTML(m.descripcion)}</td><td><strong style="color:${esDesc ? 'var(--color-peligro)' : 'var(--color-exito)'}">${esDesc ? '-' : '+'}${m.formato}</strong></td><td>${minutosAHorasMinutos(m.saldoNuevo)}</td></tr>`;
     }).join('');
     
-    html += `</tbody></table></div><p class="text-muted small mt-3">Generado: ${d.fechaGeneracion}</p>`;
+    html += `</tbody></table></div><p class="text-muted small mt-3">Generado: ${escapeHTML(d.fechaGeneracion)}</p>`;
     document.getElementById('tituloReporte').textContent = `Reporte Individual - ${d.funcionario.nombre}`;
     document.getElementById('contenidoReporte').innerHTML = html;
     document.getElementById('panelResultadoReporte').style.display = 'block';
@@ -964,9 +982,9 @@ async function verReporteGeneral() {
   try {
     const r = await callServer('generarReporteGeneral', document.getElementById('repGenFechaIni').value, document.getElementById('repGenFechaFin').value);
     if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
-    let html = `<h5>Estado General de Funcionarios</h5><p class="text-muted small">Generado: ${r.data.fechaGeneracion}</p><div class="table-responsive"><table class="table"><thead><tr><th>Documento</th><th>Nombre</th><th>Cargo</th><th>Acumulado</th><th>Compensado</th><th>Saldo</th></tr></thead><tbody>`;
+    let html = `<h5>Estado General de Funcionarios</h5><p class="text-muted small">Generado: ${escapeHTML(r.data.fechaGeneracion)}</p><div class="table-responsive"><table class="table"><thead><tr><th>Documento</th><th>Nombre</th><th>Cargo</th><th>Acumulado</th><th>Compensado</th><th>Saldo</th></tr></thead><tbody>`;
     if (!r.data.funcionarios || r.data.funcionarios.length === 0) html += '<tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>';
-    else html += r.data.funcionarios.map(f => `<tr><td>${f.documento}</td><td>${f.nombre}</td><td>${f.cargo || '-'}</td><td style="color:var(--color-exito);"><strong>${f.acumulado}</strong></td><td style="color:var(--color-peligro);"><strong>${f.compensado}</strong></td><td><span class="badge bg-primario-soft" style="padding:5px 10px;border-radius:15px;"><strong>${f.saldo}</strong></span></td></tr>`).join('');
+    else html += r.data.funcionarios.map(f => `<tr><td>${escapeHTML(f.documento)}</td><td>${escapeHTML(f.nombre)}</td><td>${escapeHTML(f.cargo || '-')}</td><td style="color:var(--color-exito);"><strong>${f.acumulado}</strong></td><td style="color:var(--color-peligro);"><strong>${f.compensado}</strong></td><td><span class="badge bg-primario-soft" style="padding:5px 10px;border-radius:15px;"><strong>${f.saldo}</strong></span></td></tr>`).join('');
     html += '</tbody></table></div>';
     document.getElementById('tituloReporte').textContent = 'Reporte General de Funcionarios';
     document.getElementById('contenidoReporte').innerHTML = html;
@@ -979,7 +997,7 @@ async function exportarReporteIndividual(formato) {
   if (!id) { mostrarToast('Seleccione un funcionario', 'warning'); return; }
   try {
     if (formato === 'csv') {
-      const r = await callServer('exportarCSV', 'movimientos', { idFuncionario: id });
+      const r = await callServer('exportarCSV', 'movimientos', { idFuncionario: id, fechaInicio: document.getElementById('repFechaIni').value, fechaFin: document.getElementById('repFechaFin').value });
       if (r.ok) descargarCSV(r.data.csv, r.data.filename);
     } else { await verReporteIndividual(); setTimeout(() => window.print(), 500); }
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
@@ -988,7 +1006,7 @@ async function exportarReporteIndividual(formato) {
 async function exportarGeneral(formato) {
   try {
     if (formato === 'csv') {
-      const r = await callServer('exportarCSV', 'funcionarios');
+      const r = await callServer('exportarCSV', 'funcionarios', { fechaInicio: document.getElementById('repGenFechaIni').value, fechaFin: document.getElementById('repGenFechaFin').value });
       if (r.ok) descargarCSV(r.data.csv, r.data.filename);
     } else { await verReporteGeneral(); setTimeout(() => window.print(), 500); }
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
