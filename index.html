@@ -205,7 +205,7 @@
         <h4 id="pageTitle">Resumen general</h4>
       </div>
       <div class="user-info">
-        <div>
+        <div class="text-end">
           <div style="font-size:13px;font-weight:600;" id="userName">Administrador</div>
           <div style="font-size:11px;color:#6c757d;" id="userRole">Acceso Total</div>
         </div>
@@ -235,7 +235,7 @@
         <div class="panel">
           <div class="panel-header"><h5><i class="bi bi-people"></i> Directorio de Funcionarios</h5><button class="btn btn-primario" onclick="abrirModalFuncionario()"><i class="bi bi-plus-lg"></i> Nuevo Funcionario</button></div>
           <div class="panel-body">
-            <div class="row mb-3"><div class="col-md-6"><input type="text" class="form-control" id="buscarFuncionario" placeholder="🔍 Buscar por documento o nombre..." oninput="cargarFuncionarios()"></div></div>
+            <div class="row mb-3"><div class="col-md-6"><input type="text" class="form-control" id="buscarFuncionario" placeholder="🔍 Buscar por documento o nombre..." oninput="buscarFuncionariosDebounced()"></div></div>
             <div class="table-responsive"><table class="table"><thead><tr><th>Documento</th><th>Nombre</th><th>Cargo</th><th>Dependencia</th><th>Saldo Disponible</th><th>Estado</th><th class="text-center">Acciones</th></tr></thead><tbody id="tbodyFuncionarios"></tbody></table></div>
           </div>
         </div>
@@ -366,7 +366,8 @@
                 <div class="d-grid gap-2">
                   <button class="btn btn-primario" onclick="verReporteIndividual()"><i class="bi bi-eye"></i> Visualizar Reporte</button>
                   <button class="btn btn-dorado" onclick="exportarReporteIndividual('csv')"><i class="bi bi-file-earmark-excel"></i> Exportar a Excel (CSV)</button>
-                  <button class="btn btn-outline-secondary" onclick="exportarReporteIndividual('pdf')"><i class="bi bi-printer"></i> Imprimir / Exportar a PDF</button>
+                  <button class="btn btn-danger text-white" onclick="exportarReporteIndividual('pdf_servidor')"><i class="bi bi-file-earmark-pdf"></i> Descargar Documento PDF Oficial</button>
+                  <button class="btn btn-outline-secondary" onclick="exportarReporteIndividual('pdf')"><i class="bi bi-printer"></i> Imprimir Vista</button>
                 </div>
               </div>
             </div>
@@ -375,12 +376,13 @@
             <div class="panel">
               <div class="panel-header"><h5><i class="bi bi-file-earmark-text"></i> Reporte General Consolidado</h5></div>
               <div class="panel-body">
-                <p class="text-muted small">Estado general consolidado de horas acumuladas, compensadas y saldo para todos los funcionarios.</p>
+                <p class="text-muted small">Estado consolidado de acumulado, compensado y saldo de todo el personal.</p>
                 <div class="row g-2 mb-3"><div class="col-6"><label class="form-label">Desde</label><input type="date" class="form-control" id="repGenFechaIni"></div><div class="col-6"><label class="form-label">Hasta</label><input type="date" class="form-control" id="repGenFechaFin"></div></div>
                 <div class="d-grid gap-2">
                   <button class="btn btn-primario" onclick="verReporteGeneral()"><i class="bi bi-eye"></i> Visualizar Reporte General</button>
                   <button class="btn btn-dorado" onclick="exportarGeneral('csv')"><i class="bi bi-file-earmark-excel"></i> Exportar a Excel (CSV)</button>
-                  <button class="btn btn-outline-secondary" onclick="exportarGeneral('pdf')"><i class="bi bi-printer"></i> Imprimir / Exportar a PDF</button>
+                  <button class="btn btn-danger text-white" onclick="exportarGeneral('pdf_servidor')"><i class="bi bi-file-earmark-pdf"></i> Descargar PDF Consolidado</button>
+                  <button class="btn btn-outline-secondary" onclick="exportarGeneral('pdf')"><i class="bi bi-printer"></i> Imprimir Vista</button>
                 </div>
               </div>
             </div>
@@ -395,6 +397,7 @@
   </main>
 </div>
 
+<!-- MODAL FUNCIONARIO -->
 <div class="modal fade" id="modalFuncionario" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header" style="background:var(--color-primario);color:white;"><h5 class="modal-title" id="tituloModalFunc">Nuevo Funcionario</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
@@ -412,6 +415,7 @@
   </div></div>
 </div>
 
+<!-- MODAL HISTORIAL -->
 <div class="modal fade" id="modalHistorial" tabindex="-1">
   <div class="modal-dialog modal-lg"><div class="modal-content">
     <div class="modal-header" style="background:var(--color-primario);color:white;"><h5 class="modal-title">Historial Laboral del Funcionario</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
@@ -419,6 +423,7 @@
   </div></div>
 </div>
 
+<!-- MODAL REVERSO -->
 <div class="modal fade" id="modalReverso" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header" style="background:var(--color-advertencia);"><h5 class="modal-title">Confirmar Reversión de Registro</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -431,6 +436,7 @@
   </div></div>
 </div>
 
+<!-- MODAL CONFIRMACIÓN -->
 <div class="modal fade" id="modalConfirm" tabindex="-1">
   <div class="modal-dialog modal-sm"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title">Confirmación</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -446,51 +452,19 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzE59mUJnPJ8kKSWcO8swXn7FiXgt47-wUxlWCVKKM6p2WILkKZ5DSG5qSgDbgJqJaClw/exec";
-
-async function callServer(funcion, ...args) {
-  mostrarLoader();
-  try {
-    const token = usuarioActual && usuarioActual.token ? usuarioActual.token : '';
-    if (funcion !== 'login' && funcion !== 'logout' && !token) {
-      throw new Error('La sesión no está iniciada o ha expirado. Ingrese nuevamente.');
-    }
-    const response = await fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ funcion: funcion, argumentos: args, token: token })
-    });
-    if (!response.ok) throw new Error(`Error en servidor (HTTP ${response.status})`);
-    
-    const resultado = await response.json();
-    if (resultado && resultado.sesionExpirada) {
-      usuarioActual = null;
-      document.getElementById('appContainer').classList.remove('active');
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('loginClave').value = '';
-      mostrarToast(resultado.mensaje, 'warning');
-    }
-    return resultado;
-  } catch (error) {
-    let msg = error.message;
-    if (msg.includes('Failed to fetch')) {
-      msg = 'No se pudo conectar con Google Apps Script. Verifique que la aplicación Web esté desplegada con acceso para "Cualquier persona" (Anyone).';
-    }
-    console.error('Error en llamada a servidor:', error);
-    throw new Error(msg);
-  } finally {
-    ocultarLoader();
-  }
-}
+let GAS_URL = "https://script.google.com/macros/s/AKfycbzm3dHinu8x8IxNy5YRm3YgG3bog4GH7Da87Pol95x7ZtPTACtuMsJ1-Y7ZyWJZyqAA0w/exec";
+<? if (typeof scriptUrl !== 'undefined' && scriptUrl) { ?>
+GAS_URL = "<?= scriptUrl ?>";
+<? } ?>
 
 let usuarioActual = null;
 let chartMes = null, chartPie = null, chartTop = null;
 let funcionariosCache = null;
+let debounceBuscarFunc = null;
 
 function escapeHTML(valor) {
   return String(valor == null ? '' : valor).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-
 function mostrarLoader() { document.getElementById('loader').classList.add('active'); }
 function ocultarLoader() { document.getElementById('loader').classList.remove('active'); }
 
@@ -507,19 +481,20 @@ function mostrarToast(mensaje, tipo = 'success') {
 
 function confirmar(mensaje, callback) {
   document.getElementById('confirmMensaje').innerHTML = mensaje;
-  const modal = new bootstrap.Modal(document.getElementById('modalConfirm'));
+  const modalEl = document.getElementById('modalConfirm');
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
   const btn = document.getElementById('btnConfirmOk');
   btn.onclick = () => { modal.hide(); callback(); };
   modal.show();
 }
 
 function minutosAHorasMinutos(minutos) {
-  minutos = parseInt(minutos) || 0;
+  minutos = parseInt(minutos, 10) || 0;
   const signo = minutos < 0 ? '-' : '';
   minutos = Math.abs(minutos);
   const h = Math.floor(minutos / 60);
   const m = minutos % 60;
-  return `${signo}${('0' + h).slice(-2)}:${('0' + m).slice(-2)}`;
+  return `${signo}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 function toggleSidebar() {
@@ -529,10 +504,47 @@ function toggleSidebar() {
 
 function obtenerFechaHoy() {
   const d = new Date();
-  const anio = d.getFullYear();
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-  const dia = String(d.getDate()).padStart(2, '0');
-  return `${anio}-${mes}-${dia}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+async function callServer(funcion, ...args) {
+  mostrarLoader();
+  try {
+    const token = usuarioActual && usuarioActual.token ? usuarioActual.token : '';
+    if (funcion !== 'login' && funcion !== 'logout' && !token) {
+      throw new Error('La sesión no está iniciada o ha expirado. Ingrese nuevamente.');
+    }
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ funcion: funcion, argumentos: args, token: token })
+    });
+    if (!response.ok) throw new Error(`Error en servidor (HTTP ${response.status})`);
+    
+    const texto = await response.text();
+    let resultado;
+    try { resultado = JSON.parse(texto); }
+    catch (e) { throw new Error('Respuesta no válida del servidor: ' + texto.substring(0, 150)); }
+
+    if (resultado && resultado.sesionExpirada) {
+      usuarioActual = null;
+      sessionStorage.removeItem('ctl_sesion');
+      document.getElementById('appContainer').classList.remove('active');
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('loginClave').value = '';
+      mostrarToast(resultado.mensaje, 'warning');
+    }
+    return resultado;
+  } catch (error) {
+    let msg = error.message;
+    if (msg.includes('Failed to fetch')) {
+      msg = 'No se pudo conectar con el servidor Apps Script. Verifique la conexión y que la Web App esté publicada con acceso para "Cualquier persona" (Anyone).';
+    }
+    console.error('Error llamada servidor:', error);
+    throw new Error(msg);
+  } finally {
+    ocultarLoader();
+  }
 }
 
 async function ejecutarLogin() {
@@ -546,15 +558,8 @@ async function ejecutarLogin() {
     const r = await callServer('login', usuario, clave);
     if (r.ok) {
       usuarioActual = { usuario: r.usuario, nombre: r.nombre, token: r.token };
-      document.getElementById('userName').textContent = r.nombre;
-      document.getElementById('userAvatar').textContent = r.nombre.charAt(0).toUpperCase();
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appContainer').classList.add('active');
-      
-      const hoy = obtenerFechaHoy();
-      document.getElementById('teFecha').value = hoy;
-      document.getElementById('tcFecha').value = hoy;
-      
+      sessionStorage.setItem('ctl_sesion', JSON.stringify(usuarioActual));
+      establecerInterfazUsuario(r.nombre);
       await inicializarApp();
       mostrarToast(r.mensaje, 'success');
     } else {
@@ -567,20 +572,29 @@ async function ejecutarLogin() {
   }
 }
 
+function establecerInterfazUsuario(nombre) {
+  document.getElementById('userName').textContent = nombre;
+  document.getElementById('userAvatar').textContent = nombre.charAt(0).toUpperCase();
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appContainer').classList.add('active');
+  const hoy = obtenerFechaHoy();
+  const elTe = document.getElementById('teFecha');
+  const elTc = document.getElementById('tcFecha');
+  if (elTe) elTe.value = hoy;
+  if (elTc) elTc.value = hoy;
+}
+
 function cerrarSesion() {
   confirmar('¿Está seguro de que desea cerrar la sesión actual?', () => {
     const token = usuarioActual && usuarioActual.token ? usuarioActual.token : '';
     if (token) callServer('logout').catch(err => console.warn(err));
     usuarioActual = null;
     funcionariosCache = null;
+    sessionStorage.removeItem('ctl_sesion');
     document.getElementById('appContainer').classList.remove('active');
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('loginUsuario').value = '';
     document.getElementById('loginClave').value = '';
-    if (window.innerWidth <= 992) {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('sidebarBackdrop').classList.remove('active');
-    }
   });
 }
 
@@ -642,8 +656,10 @@ function renderizarGraficos(d) {
   const dataAcum = meses.map(m => ((d.porMesAcumulado?.[m] || 0) / 60).toFixed(2));
   const dataComp = meses.map(m => ((d.porMesCompensado?.[m] || 0) / 60).toFixed(2));
   
-  if (chartMes) chartMes.destroy();
-  chartMes = new Chart(document.getElementById('chartMes'), {
+  const cMes = document.getElementById('chartMes');
+  const exMes = Chart.getChart(cMes);
+  if (exMes) exMes.destroy();
+  chartMes = new Chart(cMes, {
     type: 'bar',
     data: {
       labels: meses.length ? meses : ['Sin datos'],
@@ -663,8 +679,10 @@ function renderizarGraficos(d) {
   const compH = Number(((d.totalCompensado || 0) / 60).toFixed(2));
   const pendH = Number(((d.totalPendiente || 0) / 60).toFixed(2));
   
-  if (chartPie) chartPie.destroy();
-  chartPie = new Chart(document.getElementById('chartPie'), {
+  const cPie = document.getElementById('chartPie');
+  const exPie = Chart.getChart(cPie);
+  if (exPie) exPie.destroy();
+  chartPie = new Chart(cPie, {
     type: 'doughnut',
     data: {
       labels: ['Compensado', 'Saldo Disponible'],
@@ -690,8 +708,10 @@ function renderizarGraficos(d) {
     }
   });
   
-  if (chartTop) chartTop.destroy();
-  chartTop = new Chart(document.getElementById('chartTop'), {
+  const cTop = document.getElementById('chartTop');
+  const exTop = Chart.getChart(cTop);
+  if (exTop) exTop.destroy();
+  chartTop = new Chart(cTop, {
     type: 'bar',
     data: {
       labels: (d.topFuncionarios || []).map(f => f.nombre),
@@ -711,6 +731,13 @@ function renderizarGraficos(d) {
   });
 }
 
+function buscarFuncionariosDebounced() {
+  clearTimeout(debounceBuscarFunc);
+  debounceBuscarFunc = setTimeout(() => {
+    cargarFuncionarios();
+  }, 250);
+}
+
 async function cargarFuncionarios() {
   try {
     const filtro = document.getElementById('buscarFuncionario').value;
@@ -720,7 +747,7 @@ async function cargarFuncionarios() {
     funcionariosCache = r.data;
     const tbody = document.getElementById('tbodyFuncionarios');
     if (r.data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No se encontraron funcionarios registrados</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No se encontraron funcionarios</td></tr>';
       return;
     }
     tbody.innerHTML = r.data.map(f => `
@@ -732,9 +759,9 @@ async function cargarFuncionarios() {
         <td><span class="badge bg-primario-soft" style="padding:6px 12px;border-radius:15px;font-size:13px;">${escapeHTML(f.saldoFormato)}</span></td>
         <td><span class="badge-estado badge-${f.estado === 'ACTIVO' ? 'activo' : 'inactivo'}">${escapeHTML(f.estado)}</span></td>
         <td class="text-center">
-          <button class="btn btn-sm btn-outline-primary me-1" onclick="editarFuncionario('${escapeHTML(f.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-primary me-1" onclick="editarFuncionario('${encodeURIComponent(f.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
           <button class="btn btn-sm btn-outline-info me-1" onclick="verHistorial('${encodeURIComponent(f.id)}','${encodeURIComponent(f.nombre)}')" title="Historial"><i class="bi bi-clock-history"></i></button>
-          <button class="btn btn-sm btn-outline-${f.estado === 'ACTIVO' ? 'warning' : 'success'}" onclick="toggleEstado('${escapeHTML(f.id)}','${escapeHTML(f.estado)}')" title="Cambiar Estado"><i class="bi bi-${f.estado === 'ACTIVO' ? 'pause' : 'play'}-circle"></i></button>
+          <button class="btn btn-sm btn-outline-${f.estado === 'ACTIVO' ? 'warning' : 'success'}" onclick="toggleEstado('${encodeURIComponent(f.id)}','${encodeURIComponent(f.estado)}')" title="Cambiar Estado"><i class="bi bi-${f.estado === 'ACTIVO' ? 'pause' : 'play'}-circle"></i></button>
         </td>
       </tr>`).join('');
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
@@ -744,10 +771,11 @@ function abrirModalFuncionario() {
   document.getElementById('formFuncionario').reset();
   document.getElementById('funcId').value = '';
   document.getElementById('tituloModalFunc').textContent = 'Nuevo Funcionario';
-  new bootstrap.Modal(document.getElementById('modalFuncionario')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFuncionario')).show();
 }
 
-async function editarFuncionario(id) {
+async function editarFuncionario(idEnc) {
+  const id = decodeURIComponent(idEnc);
   try {
     const r = await callServer('obtenerFuncionario', id);
     if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
@@ -759,7 +787,7 @@ async function editarFuncionario(id) {
     document.getElementById('funcDependencia').value = f.dependencia || '';
     document.getElementById('funcEstado').value = f.estado;
     document.getElementById('tituloModalFunc').textContent = 'Editar Funcionario';
-    new bootstrap.Modal(document.getElementById('modalFuncionario')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFuncionario')).show();
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
@@ -778,14 +806,16 @@ async function guardarFuncionario() {
     const r = await callServer('guardarFuncionario', datos, usuarioActual.usuario);
     if (r.ok) {
       mostrarToast(r.mensaje, 'success');
-      bootstrap.Modal.getInstance(document.getElementById('modalFuncionario')).hide();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFuncionario')).hide();
       funcionariosCache = null;
       await cargarFuncionarios();
     } else { mostrarToast(r.mensaje, 'danger'); }
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
-async function toggleEstado(id, estadoActual) {
+async function toggleEstado(idEnc, estadoActualEnc) {
+  const id = decodeURIComponent(idEnc);
+  const estadoActual = decodeURIComponent(estadoActualEnc);
   const nuevo = estadoActual === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
   confirmar(`¿Desea cambiar el estado del funcionario a <strong>${nuevo}</strong>?`, async () => {
     try {
@@ -799,8 +829,9 @@ async function toggleEstado(id, estadoActual) {
   });
 }
 
-async function verHistorial(id, nombre) {
-  id = decodeURIComponent(id); nombre = decodeURIComponent(nombre);
+async function verHistorial(idEnc, nombreEnc) {
+  const id = decodeURIComponent(idEnc);
+  const nombre = decodeURIComponent(nombreEnc);
   try {
     const r = await callServer('listarMovimientos', { idFuncionario: id });
     if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
@@ -831,31 +862,38 @@ async function verHistorial(id, nombre) {
       html += '</tbody></table></div>';
     }
     document.getElementById('contenidoHistorial').innerHTML = html;
-    new bootstrap.Modal(document.getElementById('modalHistorial')).show();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalHistorial')).show();
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
+}
+
+async function asegurarFuncionariosCache() {
+  if (!funcionariosCache || funcionariosCache.length === 0) {
+    const r = await callServer('listarFuncionarios');
+    if (r && r.ok) funcionariosCache = r.data;
+  }
+  return funcionariosCache || [];
 }
 
 async function cargarSelectoresFunc(idSelect = null, incluirInactivos = false) {
   try {
-    if (!funcionariosCache || funcionariosCache.length === 0) {
-      const r = await callServer('listarFuncionarios');
-      if (r.ok) funcionariosCache = r.data;
-      else return;
-    }
-    
-    const lista = incluirInactivos ? funcionariosCache : funcionariosCache.filter(f => f.estado === 'ACTIVO');
-    const opciones = '<option value="">Seleccione funcionario...</option>' + lista.map(f => `<option value="${escapeHTML(f.id)}">${escapeHTML(f.nombre)} - ${escapeHTML(f.documento)}</option>`).join('');
+    const data = await asegurarFuncionariosCache();
+    const lista = incluirInactivos ? data : data.filter(f => f.estado === 'ACTIVO');
     
     if (idSelect) {
+      const opciones = (idSelect === 'repFuncionario' 
+        ? '<option value="">Seleccione funcionario...</option>' 
+        : '<option value="">Todos los funcionarios</option>') +
+        lista.map(f => `<option value="${escapeHTML(f.id)}">${escapeHTML(f.nombre)} - ${escapeHTML(f.documento)}</option>`).join('');
       document.getElementById(idSelect).innerHTML = opciones;
     } else {
-      const todos = '<option value="">Todos los funcionarios</option>' + funcionariosCache.map(f => `<option value="${escapeHTML(f.id)}">${escapeHTML(f.nombre)}</option>`).join('');
+      const todos = '<option value="">Todos los funcionarios</option>' + data.map(f => `<option value="${escapeHTML(f.id)}">${escapeHTML(f.nombre)}</option>`).join('');
       document.getElementById('filtroTEFunc').innerHTML = todos;
       document.getElementById('filtroTCFunc').innerHTML = todos;
       document.getElementById('filtroMovFunc').innerHTML = todos;
-      document.getElementById('repFuncionario').innerHTML = opciones;
+      const selectRep = '<option value="">Seleccione funcionario...</option>' + lista.map(f => `<option value="${escapeHTML(f.id)}">${escapeHTML(f.nombre)} - ${escapeHTML(f.documento)}</option>`).join('');
+      document.getElementById('repFuncionario').innerHTML = selectRep;
     }
-  } catch (e) { console.error('Error cargando selectores:', e); }
+  } catch (e) { console.error('Error selectores:', e); }
 }
 
 function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = null) {
@@ -865,10 +903,7 @@ function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = nu
   let timeout;
   
   input.addEventListener('focus', async () => {
-    if (!funcionariosCache || funcionariosCache.length === 0) {
-      const r = await callServer('listarFuncionarios');
-      if (r.ok) funcionariosCache = r.data;
-    }
+    await asegurarFuncionariosCache();
     filtrarLista();
   });
   
@@ -880,9 +915,10 @@ function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = nu
     timeout = setTimeout(filtrarLista, 150);
   });
   
-  function filtrarLista() {
+  async function filtrarLista() {
+    const data = await asegurarFuncionariosCache();
     const txt = input.value.toLowerCase().trim();
-    const activos = (funcionariosCache || []).filter(f => f.estado === 'ACTIVO');
+    const activos = data.filter(f => f.estado === 'ACTIVO');
     const filtrados = activos.filter(f => f.nombre.toLowerCase().includes(txt) || f.documento.toLowerCase().includes(txt)).slice(0, 10);
     
     if (filtrados.length === 0) { lista.style.display = 'none'; return; }
@@ -900,8 +936,10 @@ function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = nu
   });
 }
 
-async function seleccionarFuncionario(id, nombre, documento, listaId, hiddenId, docId, saldoId, inputId) {
-  id = decodeURIComponent(id); nombre = decodeURIComponent(nombre); documento = decodeURIComponent(documento);
+async function seleccionarFuncionario(idEnc, nombreEnc, docEnc, listaId, hiddenId, docId, saldoId, inputId) {
+  const id = decodeURIComponent(idEnc);
+  const nombre = decodeURIComponent(nombreEnc);
+  const documento = decodeURIComponent(docEnc);
   document.getElementById(inputId).value = nombre;
   document.getElementById(hiddenId).value = id;
   document.getElementById(docId).value = documento;
@@ -952,7 +990,7 @@ async function guardarTiempoExtra() {
     mostrarToast('Complete todos los campos obligatorios (*)', 'warning'); return;
   }
   if (datos.horaInicio === datos.horaFin) {
-    mostrarToast('La hora de inicio y fin no pueden ser iguales', 'warning'); return;
+    mostrarToast('La hora de inicio y fin no pueden ser idénticas', 'warning'); return;
   }
   
   const btn = document.getElementById('btnGuardarTE');
@@ -1002,8 +1040,8 @@ async function cargarTiempoExtra() {
 }
 
 function calcularTotalTC() {
-  const h = parseInt(document.getElementById('tcHoras').value) || 0;
-  const m = parseInt(document.getElementById('tcMinutos').value) || 0;
+  const h = parseInt(document.getElementById('tcHoras').value, 10) || 0;
+  const m = parseInt(document.getElementById('tcMinutos').value, 10) || 0;
   document.getElementById('tcTotal').value = minutosAHorasMinutos(h * 60 + m);
 }
 
@@ -1019,7 +1057,7 @@ async function guardarCompensatorio() {
   if (!datos.idFuncionario || !datos.fechaCompensatorio || !datos.motivo) {
     mostrarToast('Complete todos los campos obligatorios (*)', 'warning'); return;
   }
-  const total = (parseInt(datos.horas) || 0) * 60 + (parseInt(datos.minutos) || 0);
+  const total = (parseInt(datos.horas, 10) || 0) * 60 + (parseInt(datos.minutos, 10) || 0);
   if (total <= 0) { mostrarToast('El tiempo a descontar debe ser superior a cero', 'warning'); return; }
   
   const btn = document.getElementById('btnGuardarTC');
@@ -1046,8 +1084,8 @@ async function guardarCompensatorio() {
 async function cargarCompensatorio() {
   const filtros = {
     idFuncionario: document.getElementById('filtroTCFunc').value,
-    fechaInicio: document.getElementById('filtroTCFechaIni').value,
-    fechaFin: document.getElementById('filtroTCFechaFin').value
+    fechaInicio: document.getElementById('filtroTEFechaIni').value,
+    fechaFin: document.getElementById('filtroTEFechaFin').value
   };
   try {
     const r = await callServer('listarTiempoCompensatorio', filtros);
@@ -1071,12 +1109,12 @@ async function cargarCompensatorio() {
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
-function abrirReverso(id, tipo) {
-  id = decodeURIComponent(id);
+function abrirReverso(idEnc, tipo) {
+  const id = decodeURIComponent(idEnc);
   document.getElementById('revId').value = id;
   document.getElementById('revTipo').value = tipo;
   document.getElementById('revMotivo').value = '';
-  new bootstrap.Modal(document.getElementById('modalReverso')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalReverso')).show();
 }
 
 async function ejecutarReverso() {
@@ -1092,7 +1130,7 @@ async function ejecutarReverso() {
     
     if (r.ok) {
       mostrarToast(`✓ ${r.mensaje}. Saldo actualizado: ${r.saldoFormato}`, 'success');
-      bootstrap.Modal.getInstance(document.getElementById('modalReverso')).hide();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('modalReverso')).hide();
       funcionariosCache = null;
       await cargarTiempoExtra();
       await cargarCompensatorio();
@@ -1112,7 +1150,7 @@ async function cargarMovimientos() {
     if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
     const tbody = document.getElementById('tbodyMovimientos');
     if (!r.data || r.data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Sin movimientos que coincidan con el filtro</td></tr>'; return;
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Sin movimientos para los filtros seleccionados</td></tr>'; return;
     }
     tbody.innerHTML = r.data.map(m => {
       const esDescuento = m.tipo === 'DESCUENTO' || m.tipo === 'REVERSO_ACUMULACIÓN';
@@ -1237,6 +1275,14 @@ async function exportarReporteIndividual(formato) {
       });
       if (r.ok) descargarCSV(r.data.csv, r.data.filename);
       else mostrarToast(r.mensaje, 'danger');
+    } else if (formato === 'pdf_servidor') {
+      const r = await callServer('generarReportePDF', 'individual', {
+        idFuncionario: id,
+        fechaInicio: document.getElementById('repFechaIni').value,
+        fechaFin: document.getElementById('repFechaFin').value
+      });
+      if (r.ok) descargarPDFBase64(r.data.base64, r.data.filename);
+      else mostrarToast(r.mensaje, 'danger');
     } else {
       await verReporteIndividual();
       setTimeout(() => window.print(), 400);
@@ -1252,6 +1298,13 @@ async function exportarGeneral(formato) {
         fechaFin: document.getElementById('repGenFechaFin').value
       });
       if (r.ok) descargarCSV(r.data.csv, r.data.filename);
+      else mostrarToast(r.mensaje, 'danger');
+    } else if (formato === 'pdf_servidor') {
+      const r = await callServer('generarReportePDF', 'general', {
+        fechaInicio: document.getElementById('repGenFechaIni').value,
+        fechaFin: document.getElementById('repGenFechaFin').value
+      });
+      if (r.ok) descargarPDFBase64(r.data.base64, r.data.filename);
       else mostrarToast(r.mensaje, 'danger');
     } else {
       await verReporteGeneral();
@@ -1272,9 +1325,44 @@ function descargarCSV(csv, filename) {
   URL.revokeObjectURL(url);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function descargarPDFBase64(base64, filename) {
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'documento.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   configurarAutocompletar('teBuscarFunc', 'teListaFuncionarios', 'teIdFuncionario', 'teDocumento');
   configurarAutocompletar('tcBuscarFunc', 'tcListaFuncionarios', 'tcIdFuncionario', 'tcDocumento', 'tcSaldoDisponible');
+  
+  // Restauración de sesión activa
+  const sesionGuardada = sessionStorage.getItem('ctl_sesion');
+  if (sesionGuardada) {
+    try {
+      usuarioActual = JSON.parse(sesionGuardada);
+      const rVal = await callServer('validarToken');
+      if (rVal && rVal.ok) {
+        establecerInterfazUsuario(usuarioActual.nombre);
+        await inicializarApp();
+        return;
+      }
+    } catch (e) {
+      sessionStorage.removeItem('ctl_sesion');
+      usuarioActual = null;
+    }
+  }
   
   const hoy = obtenerFechaHoy();
   const elTe = document.getElementById('teFecha');
