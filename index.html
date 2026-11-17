@@ -245,7 +245,7 @@
         <div class="panel">
           <div class="panel-header"><h5><i class="bi bi-people"></i> Directorio de Funcionarios</h5><button class="btn btn-primario" onclick="abrirModalFuncionario()"><i class="bi bi-plus-lg"></i> Nuevo Funcionario</button></div>
           <div class="panel-body">
-            <div class="row mb-3"><div class="col-md-6"><input type="text" class="form-control" id="buscarFuncionario" placeholder="🔍 Buscar por documento o nombre..." oninput="programarBusquedaFuncionarios()"></div></div>
+            <div class="row mb-3"><div class="col-md-6"><input type="text" class="form-control" id="buscarFuncionario" placeholder="🔍 Buscar por documento o nombre..." oninput="cargarFuncionarios()"></div></div>
             <div class="table-responsive"><table class="table"><thead><tr><th>Documento</th><th>Nombre</th><th>Cargo</th><th>Dependencia</th><th>Saldo Disponible</th><th>Estado</th><th class="text-center">Acciones</th></tr></thead><tbody id="tbodyFuncionarios"></tbody></table></div>
           </div>
         </div>
@@ -541,12 +541,20 @@ function minutosAHorasMinutos(minutos) {
   minutos = Math.abs(minutos);
   const h = Math.floor(minutos / 60);
   const m = minutos % 60;
-  return `${signo}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  return `${signo}${('0' + h).slice(-2)}:${('0' + m).slice(-2)}`;
 }
 
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebarBackdrop').classList.toggle('active');
+}
+
+function obtenerFechaHoy() {
+  const d = new Date();
+  const anio = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
 }
 
 // ============================================================
@@ -567,6 +575,12 @@ async function ejecutarLogin() {
       document.getElementById('userAvatar').textContent = r.nombre.charAt(0).toUpperCase();
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appContainer').classList.add('active');
+      
+      // Inicializar fechas por defecto en formularios
+      const hoy = obtenerFechaHoy();
+      document.getElementById('teFecha').value = hoy;
+      document.getElementById('tcFecha').value = hoy;
+      
       await inicializarApp();
       mostrarToast(r.mensaje, 'success');
     } else {
@@ -675,7 +689,6 @@ function renderizarGraficos(d) {
     }
   });
   
-  // Gráfico de distribución corregido: Compensado vs Saldo Disponible (suman 100% de lo acumulado)
   const compH = Number(((d.totalCompensado || 0) / 60).toFixed(2));
   const pendH = Number(((d.totalPendiente || 0) / 60).toFixed(2));
   
@@ -736,7 +749,7 @@ async function cargarFuncionarios() {
     const r = await callServer('listarFuncionarios', filtro);
     if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
     
-    funcionariosCache = r.data; // Actualizar caché local
+    funcionariosCache = r.data;
     const tbody = document.getElementById('tbodyFuncionarios');
     if (r.data.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No se encontraron funcionarios registrados</td></tr>';
@@ -824,7 +837,7 @@ async function verHistorial(id, nombre) {
     const r = await callServer('listarMovimientos', { idFuncionario: id });
     if (!r.ok) { mostrarToast(r.mensaje, 'danger'); return; }
     const rSaldo = await callServer('obtenerSaldoDetalle', id);
-    const saldo = rSaldo.ok ? rSaldo : rSaldo.data;
+    const saldo = (rSaldo && rSaldo.ok && rSaldo.saldoFormato) ? rSaldo : (rSaldo && rSaldo.data ? rSaldo.data : { saldoFormato: '00:00', acumuladoFormato: '00:00', compensadoFormato: '00:00' });
     
     let html = `<div class="saldo-display mb-3">
       <div class="etiqueta">Estado de Cuenta de ${escapeHTML(nombre)}</div>
@@ -881,6 +894,7 @@ async function cargarSelectoresFunc(idSelect = null, incluirInactivos = false) {
 function configurarAutocompletar(inputId, listaId, hiddenId, docId, saldoId = null) {
   const input = document.getElementById(inputId);
   const lista = document.getElementById(listaId);
+  if (!input || !lista) return;
   let timeout;
   
   input.addEventListener('focus', async () => {
@@ -929,8 +943,10 @@ async function seleccionarFuncionario(id, nombre, documento, listaId, hiddenId, 
   if (saldoId) {
     try {
       const r = await callServer('obtenerSaldoDetalle', id);
-      const saldo = r.ok ? r : r.data;
-      document.getElementById(saldoId).textContent = saldo.saldoFormato;
+      const saldo = (r && r.ok && r.saldoFormato) ? r : (r && r.data ? r.data : null);
+      if (saldo && saldo.saldoFormato) {
+        document.getElementById(saldoId).textContent = saldo.saldoFormato;
+      }
     } catch (e) {
       console.warn('Error consultando saldo:', e);
     }
@@ -1286,53 +1302,35 @@ async function exportarGeneral(formato) {
   } catch (e) { mostrarToast('Error: ' + e.message, 'danger'); }
 }
 
+// ============================================================
+// EXPORTACIÓN A ARCHIVO CSV
+// ============================================================
 function descargarCSV(csv, filename) {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-
   const url = URL.createObjectURL(blob);
-  const enlace = document.createElement('a');
-  enlace.href = url;
-  enlace.download = (filename || 'reporte.csv').replace(/[\\\\/:*?"<>|]/g, '_');
-  document.body.appendChild(enlace);
-  enlace.click();
-  enlace.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'reporte.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
-// Fecha local en formato YYYY-MM-DD, sin conversiones UTC.
-function obtenerFechaHoy() {
-  const ahora = new Date();
-  const anio = ahora.getFullYear();
-  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
-  const dia = String(ahora.getDate()).padStart(2, '0');
-  return `${anio}-${mes}-${dia}`;
-}
-
-// Evita enviar una petición al servidor por cada tecla del buscador.
-let temporizadorBusquedaFuncionarios = null;
-function programarBusquedaFuncionarios() {
-  clearTimeout(temporizadorBusquedaFuncionarios);
-  temporizadorBusquedaFuncionarios = setTimeout(() => cargarFuncionarios(), 250);
-}
-
-// Inicialización de controles al terminar de cargar el documento.
+// ============================================================
+// INICIALIZACIÓN AL CARGAR EL DOM
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Configurar autocompletado en Tiempo Extra y Compensatorio
+  configurarAutocompletar('teBuscarFunc', 'teListaFuncionarios', 'teIdFuncionario', 'teDocumento');
+  configurarAutocompletar('tcBuscarFunc', 'tcListaFuncionarios', 'tcIdFuncionario', 'tcDocumento', 'tcSaldoDisponible');
+  
+  // Establecer fecha actual por defecto en inputs tipo date
   const hoy = obtenerFechaHoy();
-  ['teFecha', 'tcFecha'].forEach(id => {
-    const campo = document.getElementById(id);
-    if (campo && !campo.value) campo.value = hoy;
-  });
-
-  configurarAutocompletar(
-    'teBuscarFunc', 'teListaFuncionarios', 'teIdFuncionario',
-    'teDocumento', null
-  );
-  configurarAutocompletar(
-    'tcBuscarFunc', 'tcListaFuncionarios', 'tcIdFuncionario',
-    'tcDocumento', 'tcSaldoDisponible'
-  );
-
-  calcularTotalTC();
+  const elTe = document.getElementById('teFecha');
+  const elTc = document.getElementById('tcFecha');
+  if (elTe) elTe.value = hoy;
+  if (elTc) elTc.value = hoy;
 });
 </script>
 </body>
