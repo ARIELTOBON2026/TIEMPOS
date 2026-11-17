@@ -13,7 +13,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
-    /* (MISMO CSS QUE ANTERIORMENTE, SIN CAMBIOS) */
     :root { --color-primario: #173f66; --color-primario-oscuro: #102e4c; --color-primario-claro: #285b87; --color-dorado: #e2b84b; --color-dorado-claro: #e8c85c; --color-blanco: #ffffff; --color-gris-claro: #f3f6fa; --color-gris: #e9ecef; --color-texto: #1f2937; --color-exito: #198754; --color-peligro: #dc3545; --color-advertencia: #ffc107; --color-info: #0dcaf0; --sombra: 0 3px 14px rgba(16, 46, 76, .08); --sombra-hover: 0 4px 20px rgba(0,0,0,0.12); --radio: 14px; }
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: var(--color-gris-claro); color: var(--color-texto); margin: 0; padding: 0; min-height: 100vh; font-size: 15px; line-height: 1.55; }
@@ -412,22 +411,26 @@
 // ============================================================
 // CONFIGURACIÓN DE CONEXIÓN CON GOOGLE APPS SCRIPT
 // ============================================================
+// ⚠️ CORRECCIÓN: Se cambió el nombre de GAS_ a GAS_URL para que coincida con su uso en la función callServer
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxbeIOXIBhSUUuNeDC_CwuqtGCLEzLVdN3ZuSvTAQCrmXpeorOWvVG7fNzrS1gSJGbqyg/exec";
 
-// Función reemplazo de google.script.run para funcionar desde GitHub Pages
+// Función reemplazo de google.script.run para funcionar desde GitHub Pages o cualquier hosting
 async function callServer(funcion, ...args) {
   solicitudesActivas++;
   mostrarLoader();
   try {
-    // text/plain evita la solicitud CORS OPTIONS previa.
+    // text/plain evita la solicitud CORS OPTIONS previa que bloquea Google Apps Script
     const response = await fetch(GAS_URL, {
       method: 'POST',
       redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ funcion: funcion, argumentos: args, token: TOKEN_SESION })
     });
+    
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    
     const resultado = await response.json();
+    
     if (resultado && resultado.sesionExpirada) {
       TOKEN_SESION = '';
       usuarioActual = null;
