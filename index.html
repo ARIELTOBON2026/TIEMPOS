@@ -245,7 +245,7 @@
         <div class="panel">
           <div class="panel-header"><h5><i class="bi bi-people"></i> Directorio de Funcionarios</h5><button class="btn btn-primario" onclick="abrirModalFuncionario()"><i class="bi bi-plus-lg"></i> Nuevo Funcionario</button></div>
           <div class="panel-body">
-            <div class="row mb-3"><div class="col-md-6"><input type="text" class="form-control" id="buscarFuncionario" placeholder="🔍 Buscar por documento o nombre..." oninput="cargarFuncionarios()"></div></div>
+            <div class="row mb-3"><div class="col-md-6"><input type="text" class="form-control" id="buscarFuncionario" placeholder="🔍 Buscar por documento o nombre..." oninput="programarBusquedaFuncionarios()"></div></div>
             <div class="table-responsive"><table class="table"><thead><tr><th>Documento</th><th>Nombre</th><th>Cargo</th><th>Dependencia</th><th>Saldo Disponible</th><th>Estado</th><th class="text-center">Acciones</th></tr></thead><tbody id="tbodyFuncionarios"></tbody></table></div>
           </div>
         </div>
@@ -541,7 +541,7 @@ function minutosAHorasMinutos(minutos) {
   minutos = Math.abs(minutos);
   const h = Math.floor(minutos / 60);
   const m = minutos % 60;
-  return `${signo}${('0' + h).slice(-2)}:${('0' + m).slice(-2)}`;
+  return `${signo}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 function toggleSidebar() {
@@ -1288,3 +1288,52 @@ async function exportarGeneral(formato) {
 
 function descargarCSV(csv, filename) {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = (filename || 'reporte.csv').replace(/[\\\\/:*?"<>|]/g, '_');
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Fecha local en formato YYYY-MM-DD, sin conversiones UTC.
+function obtenerFechaHoy() {
+  const ahora = new Date();
+  const anio = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
+// Evita enviar una petición al servidor por cada tecla del buscador.
+let temporizadorBusquedaFuncionarios = null;
+function programarBusquedaFuncionarios() {
+  clearTimeout(temporizadorBusquedaFuncionarios);
+  temporizadorBusquedaFuncionarios = setTimeout(() => cargarFuncionarios(), 250);
+}
+
+// Inicialización de controles al terminar de cargar el documento.
+document.addEventListener('DOMContentLoaded', () => {
+  const hoy = obtenerFechaHoy();
+  ['teFecha', 'tcFecha'].forEach(id => {
+    const campo = document.getElementById(id);
+    if (campo && !campo.value) campo.value = hoy;
+  });
+
+  configurarAutocompletar(
+    'teBuscarFunc', 'teListaFuncionarios', 'teIdFuncionario',
+    'teDocumento', null
+  );
+  configurarAutocompletar(
+    'tcBuscarFunc', 'tcListaFuncionarios', 'tcIdFuncionario',
+    'tcDocumento', 'tcSaldoDisponible'
+  );
+
+  calcularTotalTC();
+});
+</script>
+</body>
+</html>
